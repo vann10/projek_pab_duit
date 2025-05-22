@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment(1.0, 1.0),
+                  center: Alignment(-1.0, -1.5),
                   radius: 1,
                   colors: [
                     Color(0xFF141326),
