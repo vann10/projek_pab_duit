@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/home_page.dart';
+import 'package:projek_pab_duit/income_expense.dart';
 import 'package:projek_pab_duit/loading_page.dart';
 
 Future<void> main() async {
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       initialRoute: '/',
-      routes: {'/': (context) => const HomePage()},
+      routes: {'/': (context) => const IncomeExpense()},
     );
   }
 }
