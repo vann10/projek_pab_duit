@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -80,14 +82,18 @@ Widget Balance() {
           ),
         ),
         Text(
-          "Rp3.000.000,00",
+          "Rp9.966.000,00",
           style: GoogleFonts.dmSans(
             color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
+        SizedBox(height: 70,),
+        Image.asset('assets/images/percentage.png',
+        width: 350,)
       ],
     ),
   );
 }
+
