@@ -21,7 +21,11 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
 <<<<<<< HEAD
+<<<<<<< HEAD
       routes: {'/': (context) => const HomePage()},
+=======
+      routes: {'/': (context) => const Login()},
+>>>>>>> parent of 5b28002 (Merge branch 'main' of https://github.com/vann10/projek_pab_duit)
 =======
       routes: {'/': (context) => const Login()},
 >>>>>>> parent of 5b28002 (Merge branch 'main' of https://github.com/vann10/projek_pab_duit)
