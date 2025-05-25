@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projek_pab_duit/bottom_navbar.dart';
+import 'package:projek_pab_duit/transaction_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,29 +15,40 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     HomeContent(),
-    Center(child: Text("Wallet", style: TextStyle(color: Colors.white))),
-    Center(child: Text("Stats", style: TextStyle(color: Colors.white))),
-    Center(child: Text("Profile", style: TextStyle(color: Colors.white))),
+    WalletPage(),
+    StatsPage(),
+    ProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF141326),
-      body: _pages[_currentIndex],
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+      body: Stack(
+        children: [
+          _pages[_currentIndex],
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: CustomBottomNavBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class HomeContent extends StatelessWidget {
+  const HomeContent({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -57,13 +69,88 @@ class HomeContent extends StatelessWidget {
             ),
           ),
         ),
-        Column(children: [Header(), const SizedBox(height: 50), Balance()]),
+        // Background image
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: -190,
+          child: Image.asset(
+            'assets/images/subtract.png',
+            fit: BoxFit.contain,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header(),
+            const SizedBox(height: 50),
+
+            balance(),
+            const SizedBox(height: 30),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 25),
+              child: Text(
+                "My Transactions",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(bottom: 100),
+                child: Column(
+                  children: [
+                    TransactionCard(
+                      merchantName: 'Shell',
+                      date: 'Sep 02, 2022',
+                      amount: 45,
+                      logoAsset: 'assets/images/shell_logo.png',
+                    ),
+                    TransactionCard(
+                      merchantName: 'Shell',
+                      date: 'Sep 02, 2022',
+                      amount: 45,
+                      logoAsset: 'assets/images/shell_logo.png',
+                    ),
+                    TransactionCard(
+                      merchantName: 'Shell',
+                      date: 'Sep 02, 2022',
+                      amount: 45,
+                      logoAsset: 'assets/images/shell_logo.png',
+                    ),
+                    TransactionCard(
+                      merchantName: 'Shell',
+                      date: 'Sep 02, 2022',
+                      amount: 45,
+                      logoAsset: 'assets/images/shell_logo.png',
+                    ),
+                    TransactionCard(
+                      merchantName: 'Shell',
+                      date: 'Sep 02, 2022',
+                      amount: 45,
+                      logoAsset: 'assets/images/shell_logo.png',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
-Widget Header() {
+Widget header() {
   return Padding(
     padding: const EdgeInsets.only(top: 80.0, left: 20.0),
     child: Row(
@@ -83,7 +170,7 @@ Widget Header() {
   );
 }
 
-Widget Balance() {
+Widget balance() {
   return Center(
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -101,8 +188,20 @@ Widget Balance() {
           ),
         ),
         SizedBox(height: 70),
-        Image.asset('assets/images/percentage.png', width: 350),
+        Image.asset('assets/images/percentage.png', width: 360),
       ],
     ),
   );
+}
+
+Widget WalletPage() {
+  return Center(child: Text("KON"));
+}
+
+Widget StatsPage() {
+  return Center(child: Text("WalletPage"));
+}
+
+Widget ProfilePage() {
+  return Center(child: Text("WalletPage"));
 }
