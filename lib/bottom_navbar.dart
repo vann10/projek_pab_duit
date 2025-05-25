@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:zoom_tap_animation/zoom_tap_animation.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,41 +14,81 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(30),
-        topRight: Radius.circular(30),
-      ),
-      child: BottomAppBar(
-        color: Colors.black.withValues(alpha: 0.5), // semi-transparan
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildIcon(Icons.home, 0),
-              _buildIcon(Icons.account_balance_wallet, 1),
-              _buildIcon(Icons.bar_chart, 2, isCenter: true),
-              _buildIcon(Icons.person, 3),
-            ],
+    final theme = Theme.of(context);
+
+    return Positioned(
+      bottom: 18,
+      left: 18,
+      right: 18,
+      height: 86,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(width: 2, color: theme.scaffoldBackgroundColor),
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(24),
+            topLeft: Radius.circular(24),
+            bottomLeft: Radius.circular(52),
+            bottomRight: Radius.circular(52),
+          ),
+          color: theme.scaffoldBackgroundColor.withOpacity(0.1),
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(24),
+            topLeft: Radius.circular(24),
+            bottomLeft: Radius.circular(52),
+            bottomRight: Radius.circular(52),
+          ),
+          child: ClipPath(
+            clipper: MyCustomClipper(),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildIcon(Icons.home, 0),
+                  _buildIcon(Icons.account_balance_wallet, 1),
+                  _buildIcon(Icons.bar_chart, 2),
+                  _buildIcon(Icons.person, 3),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildIcon(IconData icon, int index, {bool isCenter = false}) {
-    return GestureDetector(
+  Widget _buildIcon(IconData icon, int index) {
+    final isSelected = currentIndex == index;
+    return ZoomTapAnimation(
       onTap: () => onTap(index),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(10),
         child: Icon(
           icon,
-          size: currentIndex == index ? 27 : 24,
-          color: currentIndex == index ? Colors.white : Colors.white54,
+          size: isSelected ? 27 : 24,
+          color: isSelected ? Colors.white : Colors.white38,
         ),
       ),
     );
   }
+}
+
+class MyCustomClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width - 64, size.height);
+    path.lineTo(64, size.height);
+    path.lineTo(0, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
 }
