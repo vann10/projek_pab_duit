@@ -1,63 +1,78 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:projek_pab_duit/bottom_navbar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    HomeContent(),
+    Center(child: Text("Wallet", style: TextStyle(color: Colors.white))),
+    Center(child: Text("Stats", style: TextStyle(color: Colors.white))),
+    Center(child: Text("Profile", style: TextStyle(color: Colors.white))),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background image
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(-1.0, -1.5),
-                  radius: 1,
-                  colors: [
-                    Color(0xFF141326),
-                    Color.fromARGB(255, 64, 134, 232),
-                    Color(0xFF141326),
-                  ],
-                  stops: [0.0, 0.7, 1],
-                ),
-              ),
+      backgroundColor: const Color(0xFF141326),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
+    );
+  }
+}
+
+class HomeContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(-1.0, -1.5),
+              radius: 1,
+              colors: [
+                Color(0xFF141326),
+                Color.fromARGB(255, 64, 134, 232),
+                Color(0xFF141326),
+              ],
+              stops: [0.0, 0.7, 1],
             ),
           ),
-
-          Column(children: [
-            Header(),
-            SizedBox(height: 50),
-            Balance()
-            ]
-            ),
-        ],
-      ),
+        ),
+        Column(children: [Header(), const SizedBox(height: 50), Balance()]),
+      ],
     );
   }
 }
 
 Widget Header() {
   return Padding(
-    padding: const EdgeInsets.only(
-      top: 80.0,
-      left: 20.0,
-    ), // atur jarak dari atas
+    padding: const EdgeInsets.only(top: 80.0, left: 20.0),
     child: Row(
-      // optional: untuk posisi tengah horizontal
       children: [
         Image.asset('assets/images/hamburger.png', width: 30, height: 30),
         SizedBox(width: 80),
         Text(
           "Welcome",
           style: GoogleFonts.syncopate(
-            // atau roboto, lato, dsb.
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -68,7 +83,6 @@ Widget Header() {
   );
 }
 
-
 Widget Balance() {
   return Center(
     child: Column(
@@ -76,10 +90,7 @@ Widget Balance() {
       children: [
         Text(
           "Available Balance",
-          style: GoogleFonts.dmSans(
-            color: Colors.green,
-            fontSize: 20,
-          ),
+          style: GoogleFonts.dmSans(color: Colors.green, fontSize: 20),
         ),
         Text(
           "Rp9.966.000,00",
@@ -89,11 +100,9 @@ Widget Balance() {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 70,),
-        Image.asset('assets/images/percentage.png',
-        width: 350,)
+        SizedBox(height: 70),
+        Image.asset('assets/images/percentage.png', width: 350),
       ],
     ),
   );
 }
-
