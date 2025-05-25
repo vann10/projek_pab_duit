@@ -1,10 +1,23 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:projek_pab_duit/bottom_navbar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    HomeContent(),
+    Center(child: Text("Wallet", style: TextStyle(color: Colors.white))),
+    Center(child: Text("Stats", style: TextStyle(color: Colors.white))),
+    Center(child: Text("Profile", style: TextStyle(color: Colors.white))),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -52,16 +65,14 @@ class HomeContent extends StatelessWidget {
 
 Widget Header() {
   return Padding(
-    padding: const EdgeInsets.only(top: 80.0, left: 20.0), // atur jarak dari atas
+    padding: const EdgeInsets.only(top: 80.0, left: 20.0),
     child: Row(
-      // optional: untuk posisi tengah horizontal
       children: [
         Image.asset('assets/images/hamburger.png', width: 30, height: 30),
         SizedBox(width: 80),
         Text(
           "Welcome",
           style: GoogleFonts.syncopate(
-            // atau roboto, lato, dsb.
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -72,7 +83,6 @@ Widget Header() {
   );
 }
 
-
 Widget Balance() {
   return Center(
     child: Column(
@@ -80,10 +90,7 @@ Widget Balance() {
       children: [
         Text(
           "Available Balance",
-          style: GoogleFonts.dmSans(
-            color: Colors.green,
-            fontSize: 20,
-          ),
+          style: GoogleFonts.dmSans(color: Colors.green, fontSize: 20),
         ),
         Text(
           "Rp9.966.000,00",
@@ -93,52 +100,9 @@ Widget Balance() {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 70,),
-        Image.asset('assets/images/percentage.png',
-        width: 350,)
+        SizedBox(height: 70),
+        Image.asset('assets/images/percentage.png', width: 350),
       ],
     ),
   );
-}
-
-class AppDrawer extends StatelessWidget {
-  const AppDrawer({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: Color(0xFF1A1A2E),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(0xFF0F3460),
-            ),
-            child: Text(
-              'Menu',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.home, color: Colors.white),
-            title: const Text('Beranda', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.settings, color: Colors.white),
-            title: const Text('Pengaturan', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }
