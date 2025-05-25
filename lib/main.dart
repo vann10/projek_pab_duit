@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/home_page.dart';
 import 'package:projek_pab_duit/loading_page.dart';
+import 'package:projek_pab_duit/login.dart';
 
 Future<void> main() async {
   runApp(const MyApp());
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       initialRoute: '/',
-      routes: {'/': (context) => const HomePage()},
+      routes: {'/': (context) => const Login()},
     );
   }
 }
