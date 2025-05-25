@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'home_page.dart';
 
-class LoadingPage extends StatelessWidget {
-  const LoadingPage({super.key});
+class LoadingPage extends StatefulWidget {
+  @override
+  _LoadingPageState createState() => _LoadingPageState();
+}
+
+class _LoadingPageState extends State<LoadingPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

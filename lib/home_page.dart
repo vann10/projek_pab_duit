@@ -1,10 +1,23 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:projek_pab_duit/bottom_navbar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    HomeContent(),
+    Center(child: Text("Wallet", style: TextStyle(color: Colors.white))),
+    Center(child: Text("Stats", style: TextStyle(color: Colors.white))),
+    Center(child: Text("Profile", style: TextStyle(color: Colors.white))),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +122,6 @@ Widget Header(BuildContext context) {
   );
 }
 
-
 Widget Balance() {
   return Center(
     child: Column(
@@ -117,10 +129,7 @@ Widget Balance() {
       children: [
         Text(
           "Available Balance",
-          style: GoogleFonts.dmSans(
-            color: Colors.green,
-            fontSize: 20,
-          ),
+          style: GoogleFonts.dmSans(color: Colors.green, fontSize: 20),
         ),
         Text(
           "Rp9.966.000,00",
@@ -130,9 +139,8 @@ Widget Balance() {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 70,),
-        Image.asset('assets/images/percentage.png',
-        width: 350,)
+        SizedBox(height: 70),
+        Image.asset('assets/images/percentage.png', width: 350),
       ],
     ),
   );
