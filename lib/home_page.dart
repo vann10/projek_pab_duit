@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projek_pab_duit/bottom_navbar.dart';
+import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/transaction_card.dart';
 import 'package:projek_pab_duit/widgets/balance.dart';
 import 'package:projek_pab_duit/widgets/header.dart';
@@ -25,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF141326),
+      backgroundColor: DarkColors.bg,
       drawer: AppDrawer(),
       body: Stack(
         children: [
@@ -64,12 +65,8 @@ class HomeContent extends StatelessWidget {
               gradient: RadialGradient(
                 center: Alignment(-1.0, -1.5),
                 radius: 1,
-                colors: [
-                  Color(0xFF141326),
-                  Color.fromARGB(255, 64, 134, 232),
-                  Color(0xFF141326),
-                ],
-                stops: [0.0, 0.7, 1],
+                colors: [DarkColors.bg, DarkColors.bg1, DarkColors.bg],
+                stops: [0.0, 0.5, 1],
               ),
             ),
           ),
@@ -77,7 +74,7 @@ class HomeContent extends StatelessWidget {
           Positioned(
             left: 0,
             right: 0,
-            bottom: -190,
+            bottom: -160,
             child: Image.asset(
               'assets/images/subtract.png',
               fit: BoxFit.contain,
@@ -161,20 +158,33 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: DarkColors.bg,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(color: Colors.white54),
-            accountName: const Text('Pleeerrr'),
-            accountEmail: null,
+            decoration: const BoxDecoration(
+              gradient: SweepGradient(
+                center: Alignment(-1.0, -1.5),
+                colors: [DarkColors.bg, DarkColors.bg1, DarkColors.bg],
+                stops: [0.0, 0.6, 0.8],
+              ),
+            ),
+            
+            accountName: const Text(
+              'Pleeerrr',
+              style: TextStyle(color: Colors.white),
+            ),
+            accountEmail: Text(
+              'Kelompok1@gmail.com',
+              style: TextStyle(color: Colors.white),
+            ),
             currentAccountPicture: Container(
               width: 20,
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.amber, width: 2),
+                color: DarkColors.oren,
               ),
               child: Padding(
                 padding: const EdgeInsets.all(2.0),
@@ -187,21 +197,24 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             otherAccountsPictures: const [
-              Icon(Icons.edit, color: Colors.white),
+              Icon(Icons.edit, color: DarkColors.oren),
             ],
           ),
           ListTile(
             leading: const Icon(Icons.home),
-            iconColor: Colors.white,
-            title: const Text('Beranda', style: TextStyle(color: Colors.white)),
+            iconColor: DarkColors.oren,
+            title: const Text(
+              'Beranda',
+              style: TextStyle(color: DarkColors.oren),
+            ),
             onTap: () => Navigator.pop(context),
           ),
           ListTile(
             leading: const Icon(Icons.settings),
-            iconColor: Colors.white,
+            iconColor: DarkColors.oren,
             title: const Text(
               'Pengaturan',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: DarkColors.oren),
             ),
             onTap: () => Navigator.pop(context),
           ),

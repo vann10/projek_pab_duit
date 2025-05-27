@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 Widget header(BuildContext context) {
   return Padding(
-    padding: const EdgeInsets.only(top: 80.0, left: 20.0),
+    padding: const EdgeInsets.only(top: 50.0, left: 20.0),
     child: Row(
       children: [
         GestureDetector(
