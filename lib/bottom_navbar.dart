@@ -1,6 +1,6 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:projek_pab_duit/widgets/build_icon.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -29,34 +29,31 @@ class CustomBottomNavBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildIcon(Icons.home, 0),
-                _buildIcon(Icons.account_balance_wallet, 1),
-                _buildIcon(Icons.bar_chart, 2),
-                _buildIcon(Icons.person, 3),
+                buildIcon(
+                  icon: Icons.home,
+                  index: 0,
+                  currentIndex: currentIndex,
+                  onTap: onTap,
+                ),
+                buildIcon(
+                  icon: Icons.account_balance_wallet,
+                  index: 1,
+                  currentIndex: currentIndex,
+                  onTap: onTap,
+                ),
+                buildIcon(
+                  icon: Icons.bar_chart,
+                  index: 2,
+                  currentIndex: currentIndex,
+                  onTap: onTap,
+                ),
+                buildIcon(
+                  icon: Icons.person,
+                  index: 3,
+                  currentIndex: currentIndex,
+                  onTap: onTap,
+                ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIcon(IconData icon, int index) {
-    final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: Transform.translate(
-          offset: const Offset(0, -10), // geser 6 piksel ke atas
-          child: Transform.scale(
-            scale: isSelected ? 1.3 : 1,
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              size: 24,
-              color: isSelected ? Colors.white : Colors.white54,
             ),
           ),
         ),

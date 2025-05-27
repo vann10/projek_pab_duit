@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projek_pab_duit/bottom_navbar.dart';
 import 'package:projek_pab_duit/transaction_card.dart';
+import 'package:projek_pab_duit/widgets/balance.dart';
+import 'package:projek_pab_duit/widgets/header.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -153,35 +155,6 @@ class HomeContent extends StatelessWidget {
   }
 }
 
-Widget header(BuildContext context) {
-  return Padding(
-    padding: const EdgeInsets.only(top: 80.0, left: 20.0),
-    child: Row(
-      children: [
-        GestureDetector(
-          onTap: () {
-            Scaffold.of(context).openDrawer();
-          },
-          child: Image.asset(
-            'assets/images/hamburger.png',
-            width: 30,
-            height: 30,
-          ),
-        ),
-        SizedBox(width: 80),
-        Text(
-          "Welcome",
-          style: GoogleFonts.syncopate(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
@@ -204,19 +177,11 @@ class AppDrawer extends StatelessWidget {
                 border: Border.all(color: Colors.amber, width: 2),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(2.0),
                 child: ClipOval(
                   child: FittedBox(
                     fit: BoxFit.contain,
-                    child: Image.asset(
-                      'assets/images/team.jpg',
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Text(
-                          'Image failed to load',
-                          style: TextStyle(color: Colors.red),
-                        );
-                      },
-                    ),
+                    child: Image.asset('assets/images/team.jpg'),
                   ),
                 ),
               ),
@@ -244,30 +209,6 @@ class AppDrawer extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget balance() {
-  return Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          "Available Balance",
-          style: GoogleFonts.dmSans(color: Colors.green, fontSize: 20),
-        ),
-        Text(
-          "Rp9.966.000,00",
-          style: GoogleFonts.dmSans(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 70),
-        Image.asset('assets/images/percentage.png', width: 360),
-      ],
-    ),
-  );
 }
 
 Widget WalletPage() {
