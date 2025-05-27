@@ -23,9 +23,9 @@ class CustomBottomNavBar extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: BottomAppBar(
           color: Color(0xFF141326).withOpacity(0.9),
-          height: 60,
+          height: 50,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -41,20 +41,23 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIcon(IconData icon, int index, {bool isCenter = false}) {
+  Widget _buildIcon(IconData icon, int index) {
     final isSelected = currentIndex == index;
     return GestureDetector(
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Transform.scale(
-          scale: isSelected ? 1.3 : 1,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 24,
-            color: isSelected ? Colors.white : Colors.white54,
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: Transform.translate(
+          offset: const Offset(0, -10), // geser 6 piksel ke atas
+          child: Transform.scale(
+            scale: isSelected ? 1.3 : 1,
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 24,
+              color: isSelected ? Colors.white : Colors.white54,
+            ),
           ),
         ),
       ),
