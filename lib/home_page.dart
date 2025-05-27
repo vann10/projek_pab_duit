@@ -208,7 +208,15 @@ class AppDrawer extends StatelessWidget {
                 child: ClipOval(
                   child: FittedBox(
                     fit: BoxFit.contain,
-                    child: Image.asset('assets/images/team.jpg'),
+                    child: Image.asset(
+                      'assets/images/team.jpg',
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Text(
+                          'Image failed to load',
+                          style: TextStyle(color: Colors.red),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
