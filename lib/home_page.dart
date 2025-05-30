@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:projek_pab_duit/bottom_navbar.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/transaction_card.dart';

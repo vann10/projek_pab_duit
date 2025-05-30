@@ -9,14 +9,14 @@ class TransactionCard extends StatelessWidget {
   final Color accentColor;
 
   const TransactionCard({
-    Key? key,
+    super.key,
     required this.merchantName,
     required this.date,
     required this.amount,
     required this.logoAsset,
     this.backgroundColor = const Color(0xFF141326),
     this.accentColor = const Color(0xFFFF6B35),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

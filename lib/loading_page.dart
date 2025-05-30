@@ -4,6 +4,8 @@ import 'login.dart';
 
 // Jangan lupa buat class HomePage jika belum ada
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(body: Center(child: Text("Halaman Utama")));
@@ -11,6 +13,8 @@ class HomePage extends StatelessWidget {
 }
 
 class LoadingPage extends StatefulWidget {
+  const LoadingPage({super.key});
+
   @override
   _LoadingPageState createState() => _LoadingPageState(); // ✅ perbaikan dari 'cretaState'
 }
