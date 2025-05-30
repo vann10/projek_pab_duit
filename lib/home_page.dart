@@ -55,6 +55,39 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<dynamic> transactionList = [
+      TransactionCard(
+        merchantName: 'Shell',
+        date: 'Sep 02, 2022',
+        amount: 45.0,
+        logoAsset: 'assets/images/shell_logo.png',
+      ),
+      TransactionCard(
+        merchantName: 'Shell',
+        date: 'Sep 02, 2022',
+        amount: 45.0,
+        logoAsset: 'assets/images/shell_logo.png',
+      ),
+      TransactionCard(
+        merchantName: 'Shell',
+        date: 'Sep 02, 2022',
+        amount: 45.0,
+        logoAsset: 'assets/images/shell_logo.png',
+      ),
+      TransactionCard(
+        merchantName: 'Shell',
+        date: 'Sep 02, 2022',
+        amount: 45.0,
+        logoAsset: 'assets/images/shell_logo.png',
+      ),
+      TransactionCard(
+        merchantName: 'Shell',
+        date: 'Sep 02, 2022',
+        amount: 45.0,
+        logoAsset: 'assets/images/shell_logo.png',
+      ),
+    ];
+
     return Scaffold(
       body: Stack(
         children: [
@@ -105,43 +138,19 @@ class HomeContent extends StatelessWidget {
               const SizedBox(height: 16),
 
               Expanded(
-                child: SingleChildScrollView(
+                child: ListView.builder(
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    children: [
-                      TransactionCard(
-                        merchantName: 'Shell',
-                        date: 'Sep 02, 2022',
-                        amount: 45,
-                        logoAsset: 'assets/images/shell_logo.png',
-                      ),
-                      TransactionCard(
-                        merchantName: 'Shell',
-                        date: 'Sep 02, 2022',
-                        amount: 45,
-                        logoAsset: 'assets/images/shell_logo.png',
-                      ),
-                      TransactionCard(
-                        merchantName: 'Shell',
-                        date: 'Sep 02, 2022',
-                        amount: 45,
-                        logoAsset: 'assets/images/shell_logo.png',
-                      ),
-                      TransactionCard(
-                        merchantName: 'Shell',
-                        date: 'Sep 02, 2022',
-                        amount: 45,
-                        logoAsset: 'assets/images/shell_logo.png',
-                      ),
-                      TransactionCard(
-                        merchantName: 'Shell',
-                        date: 'Sep 02, 2022',
-                        amount: 45,
-                        logoAsset: 'assets/images/shell_logo.png',
-                      ),
-                    ],
-                  ),
+                  itemCount: transactionList.length,
+                  itemBuilder: (context, index) {
+                    final tx = transactionList[index];
+                    return TransactionCard(
+                      merchantName: tx.merchantName,
+                      date: tx.date,
+                      amount: tx.amount,
+                      logoAsset: tx.logoAsset,
+                    );
+                  },
                 ),
               ),
             ],
@@ -170,7 +179,7 @@ class AppDrawer extends StatelessWidget {
                 stops: [0.0, 0.6, 0.8],
               ),
             ),
-            
+
             accountName: const Text(
               'Pleeerrr',
               style: TextStyle(color: Colors.white),
