@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:projek_pab_duit/themes/colors.dart';
 
 Widget header(BuildContext context) {
   return Padding(
@@ -10,11 +11,7 @@ Widget header(BuildContext context) {
           onTap: () {
             Scaffold.of(context).openDrawer();
           },
-          child: Image.asset(
-            'assets/images/hamburger.png',
-            width: 30,
-            height: 30,
-          ),
+          child: Icon(Icons.menu, size: 35, color: Colors.white),
         ),
         SizedBox(width: 80),
         Text(
