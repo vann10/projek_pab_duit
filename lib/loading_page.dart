@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'login.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -13,9 +11,10 @@ class _LoadingPageState extends State<LoadingPage> {
   @override
   void initState() {
     super.initState();
-
-    Future.delayed(Duration(milliseconds: 150), () {
-      Navigator.pushReplacementNamed(context, '/login');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration(microseconds: 200), () {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
     });
   }
 

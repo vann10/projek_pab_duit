@@ -32,7 +32,6 @@ class _LoginState extends State<Login> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    // Force rebuild when orientation changes
     if (mounted) {
       setState(() {});
     }
@@ -44,7 +43,6 @@ class _LoginState extends State<Login> with WidgetsBindingObserver {
       value: _loginBloc,
       child: BlocListener<LoginBloc, LoginState>(
         listener: (context, state) {
-          // Handle navigation when PIN is correct
           if (state.enteredPin.length == 4 &&
               !state.isPinWrong &&
               !state.isLoading &&
@@ -54,7 +52,6 @@ class _LoginState extends State<Login> with WidgetsBindingObserver {
         },
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Use LayoutBuilder instead of OrientationBuilder for more reliable detection
             final isLandscape = constraints.maxWidth > constraints.maxHeight;
 
             return AnimatedSwitcher(
