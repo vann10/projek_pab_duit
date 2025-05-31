@@ -233,13 +233,13 @@ class AppDrawer extends StatelessWidget {
 }
 
 Widget walletPage() {
-  return Center(child: Text("KON"));
+  return Center(child: Text("WalletPage"));
 }
 
 Widget statsPage() {
-  return Center(child: Text("WalletPage"));
+  return Center(child: Text("StatsPage"));
 }
 
 Widget profilePage() {
-  return Center(child: Text("WalletPage"));
+  return Center(child: Text("ProfilePage"));
 }

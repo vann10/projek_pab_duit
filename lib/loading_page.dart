@@ -11,10 +11,9 @@ class _LoadingPageState extends State<LoadingPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(Duration(microseconds: 200), () {
-        Navigator.pushReplacementNamed(context, '/login');
-      });
+
+    Future.delayed(Duration(milliseconds: 3000), () {
+      Navigator.pushReplacementNamed(context, '/login');
     });
   }
 
