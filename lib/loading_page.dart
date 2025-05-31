@@ -14,15 +14,8 @@ class _LoadingPageState extends State<LoadingPage> {
   void initState() {
     super.initState();
 
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(Duration(milliseconds: 150), () {
       Navigator.pushReplacementNamed(context, '/login');
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Login(),
-        ),
-      );
     });
   }
 
