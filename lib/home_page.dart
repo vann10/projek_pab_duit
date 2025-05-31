@@ -180,7 +180,7 @@ class AppDrawer extends StatelessWidget {
             ),
 
             accountName: const Text(
-              'Pleeerrr',
+              'Kelompok 1',
               style: TextStyle(color: Colors.white),
             ),
             accountEmail: Text(

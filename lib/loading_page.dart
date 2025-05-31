@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'login.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -14,6 +16,13 @@ class _LoadingPageState extends State<LoadingPage> {
 
     Future.delayed(Duration(seconds: 1), () {
       Navigator.pushReplacementNamed(context, '/login');
+    Future.delayed(Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Login(),
+        ),
+      );
     });
   }
 
