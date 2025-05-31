@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:projek_pab_duit/bottom_navbar.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/transaction_card.dart';
@@ -18,9 +17,9 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     HomeContent(),
-    WalletPage(),
-    StatsPage(),
-    ProfilePage(),
+    walletPage(),
+    statsPage(),
+    profilePage(),
   ];
 
   @override
@@ -233,14 +232,14 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-Widget WalletPage() {
+Widget walletPage() {
   return Center(child: Text("KON"));
 }
 
-Widget StatsPage() {
+Widget statsPage() {
   return Center(child: Text("WalletPage"));
 }
 
-Widget ProfilePage() {
+Widget profilePage() {
   return Center(child: Text("WalletPage"));
 }

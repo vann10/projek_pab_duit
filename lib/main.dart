@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projek_pab_duit/home_page.dart';
+import 'package:projek_pab_duit/home_page.dart' as home;
 import 'package:projek_pab_duit/loading_page.dart';
 import 'package:projek_pab_duit/login.dart';
 
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => LoadingPage(),
         '/login': (context) => Login(),
-        '/home': (context) => HomeContent(),
+        '/home': (context) => const home.HomePage(),
       },
     );
   }

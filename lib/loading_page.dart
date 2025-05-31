@@ -1,18 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'login.dart';
-
-// Jangan lupa buat class HomePage jika belum ada
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text("Halaman Utama")));
-  }
-}
 
 class LoadingPage extends StatefulWidget {
+  const LoadingPage({super.key});
+
   @override
-  _LoadingPageState createState() => _LoadingPageState(); // ✅ perbaikan dari 'cretaState'
+  _LoadingPageState createState() => _LoadingPageState();
 }
 
 class _LoadingPageState extends State<LoadingPage> {
@@ -20,14 +12,8 @@ class _LoadingPageState extends State<LoadingPage> {
   void initState() {
     super.initState();
 
-    // ✅ perbaikan penulisan Duration dan penempatan tanda kurung
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Login(),
-        ), // ✅ builder, bukan MaterialPageRoute:
-      );
+    Future.delayed(Duration(seconds: 1), () {
+      Navigator.pushReplacementNamed(context, '/login');
     });
   }
 
