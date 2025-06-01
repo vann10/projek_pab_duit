@@ -18,7 +18,7 @@ Widget balance() {
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 70),
+        SizedBox(height: 50),
         Image.asset('assets/images/percentage.png', width: 360),
       ],
     ),

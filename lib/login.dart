@@ -1,7 +1,7 @@
 // login.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'login_bloc.dart';
+import 'blocs/login_bloc.dart';
 import 'login_portrait.dart';
 import 'login_landscape.dart';
 
