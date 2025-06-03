@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'blocs/login_bloc.dart';
+import '../blocs/login_bloc.dart';
 
 class LoginLandscape extends StatelessWidget {
   const LoginLandscape({super.key});

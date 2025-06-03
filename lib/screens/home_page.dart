@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:projek_pab_duit/bottom_navbar.dart';
+import 'package:projek_pab_duit/widgets/bottom_navbar.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
-import 'package:projek_pab_duit/transaction_card.dart';
+import 'package:projek_pab_duit/widgets/transaction_card.dart';
 import 'package:projek_pab_duit/widgets/balance.dart';
 import 'package:projek_pab_duit/widgets/header.dart';
 

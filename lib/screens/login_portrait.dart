@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'blocs/login_bloc.dart';
+import '../blocs/login_bloc.dart';
 
 class LoginPortrait extends StatelessWidget {
   const LoginPortrait({super.key});

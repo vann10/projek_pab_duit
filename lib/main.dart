@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:projek_pab_duit/home_page.dart' as home;
-import 'package:projek_pab_duit/loading_page.dart';
-import 'package:projek_pab_duit/login.dart';
+import 'package:projek_pab_duit/screens/home_page.dart' as home;
+import 'package:projek_pab_duit/screens/loading_page.dart';
+import 'package:projek_pab_duit/screens/login.dart';
 
 Future<void> main() async {
   runApp(const MyApp());
