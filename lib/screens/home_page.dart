@@ -4,6 +4,7 @@ import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/widgets/transaction_card.dart';
 import 'package:projek_pab_duit/widgets/balance.dart';
 import 'package:projek_pab_duit/widgets/header.dart';
+import 'package:projek_pab_duit/widgets/add_button.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -153,6 +154,11 @@ class HomeContent extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          AddButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/add');
+            },
           ),
         ],
       ),
