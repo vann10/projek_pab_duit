@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projek_pab_duit/screens/balance_page.dart';
 import 'package:projek_pab_duit/widgets/bottom_navbar.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/widgets/transaction_card.dart';
@@ -18,7 +19,7 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     HomeContent(),
-    walletPage(),
+    WalletScreen(),
     statsPage(),
     profilePage(),
   ];
@@ -107,7 +108,7 @@ class HomeContent extends StatelessWidget {
           Positioned(
             left: 0,
             right: 0,
-            bottom: -160,
+            bottom: -170,
             child: Image.asset(
               'assets/images/subtract.png',
               fit: BoxFit.contain,
