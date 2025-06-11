@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:projek_pab_duit/db/database_helper.dart';
 
 class CreditCardModel {
   final String cardHolderName;
@@ -150,21 +152,47 @@ class BalanceWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        children: [
-          Text(
-            'Rp1.000.000.000',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            'Available Balance',
-            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
-          ),
-        ],
+      child: FutureBuilder<int>(
+        future: DatabaseHelper.instance.getTotalSaldo(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text(
+              'Error: ${snapshot.error}',
+              style: GoogleFonts.poppins(color: Colors.red),
+            );
+          } else {
+            final total = snapshot.data ?? 0;
+
+            final formattedSaldo = NumberFormat.currency(
+              locale: 'id_ID',
+              symbol: 'Rp',
+              decimalDigits: 0,
+            ).format(total);
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formattedSaldo,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Available Balance',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }
