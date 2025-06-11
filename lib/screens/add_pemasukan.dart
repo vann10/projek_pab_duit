@@ -119,7 +119,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                       // Header
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0,
+                          horizontal: 16,
                           vertical: 16,
                         ),
                         child: Row(
@@ -132,34 +132,8 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
-                            Row(
-                              children: [
-                                const Text(
-                                  "Payment Method",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                // Add submit button in header when keyboard is visible
-                                if (isKeyboardVisible) ...[
-                                  const SizedBox(width: 16),
-                                  TextButton(
-                                    onPressed: _submitForm,
-                                    child: const Text(
-                                      'SAVE',
-                                      style: TextStyle(
-                                        color: DarkColors.oren,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
+                          ]
+                      ),
                       ),
 
                       // Income / Expense toggle
