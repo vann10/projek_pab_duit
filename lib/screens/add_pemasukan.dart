@@ -86,16 +86,32 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
     );
   }
 
+  void _submitForm() {
+    debugPrint('Amount: $_amount');
+    debugPrint('Description: $_description');
+    debugPrint('Category: $_category');
+    debugPrint('Type: ${_isExpense ? 'Expense' : 'Income'}');
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    
     return Scaffold(
       backgroundColor: DarkColors.bg,
+      resizeToAvoidBottomInset: false,
+      // Add floating action button that's always visible
+      floatingActionButton: isKeyboardVisible ? FloatingActionButton(
+        onPressed: _submitForm,
+        backgroundColor: DarkColors.oren,
+        child: const Icon(Icons.check, color: Colors.white),
+      ) : null,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: Stack(
-                // MODIFIED: Wrap dengan Stack untuk overlay
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,9 +132,27 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
-                            const Text(
-                              "Payment Method",
-                              style: TextStyle(color: Colors.white),
+                            Row(
+                              children: [
+                                const Text(
+                                  "Payment Method",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                // Add submit button in header when keyboard is visible
+                                if (isKeyboardVisible) ...[
+                                  const SizedBox(width: 16),
+                                  TextButton(
+                                    onPressed: _submitForm,
+                                    child: const Text(
+                                      'SAVE',
+                                      style: TextStyle(
+                                        color: DarkColors.oren,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             const Icon(
                               Icons.arrow_drop_down,
@@ -215,9 +249,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  _category == null || _category!.isEmpty
-                                      ? "Category"
-                                      : _category!,
+                                  _category.isEmpty ? "Category" : _category,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
@@ -272,7 +304,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                     ],
                   ),
 
-                  // MODIFIED: Dropdown sebagai overlay
+                  // Dropdown overlay
                   if (_showDropdown)
                     Positioned(
                       top: 140,
@@ -322,72 +354,66 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
               ),
             ),
 
-            // Numpad (selalu di bawah)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Column(
-                children: [
-                  for (var i = 0; i < 3; i++)
-                    SizedBox(
-                      height: 80,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 30),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: List.generate(3, (index) {
-                            final num = (1 + 3 * i + index).toString();
-                            return numButton(
-                              num,
-                              onPressed: () => _onNumberPress(num),
-                            );
-                          }),
+            // Numpad (only show when keyboard is not visible)
+            if (!isKeyboardVisible)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < 3; i++)
+                      SizedBox(
+                        height: 80,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(3, (index) {
+                              final num = (1 + 3 * i + index).toString();
+                              return numButton(
+                                num,
+                                onPressed: () => _onNumberPress(num),
+                              );
+                            }),
+                          ),
                         ),
                       ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Backspace
-                        TextButton(
-                          onPressed: _onBackspace,
-                          child: const Icon(
-                            Icons.backspace,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-
-                        // 0
-                        numButton('0', onPressed: () => _onNumberPress('0')),
-
-                        // OK
-                        TextButton(
-                          onPressed: () {
-                            debugPrint('Amount: $_amount');
-                            debugPrint('Description: $_description');
-                            debugPrint(
-                              'Type: ${_isExpense ? 'Expense' : 'Income'}',
-                            );
-                            Navigator.pop(context);
-                          },
-                          child: const Text(
-                            'OK',
-                            style: TextStyle(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Backspace
+                          TextButton(
+                            onPressed: _onBackspace,
+                            child: const Icon(
+                              Icons.backspace,
                               color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              size: 24,
                             ),
                           ),
-                        ),
-                      ],
+
+                          // 0
+                          numButton('0', onPressed: () => _onNumberPress('0')),
+
+                          // OK
+                          TextButton(
+                            onPressed: _submitForm,
+                            child: const Text(
+                              'OK',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

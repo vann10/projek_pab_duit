@@ -65,6 +65,20 @@ class DatabaseHelper {
     });
   }
 
+  Future<int> insertTransaksi(Map<String, dynamic> data) async {
+    final db = await instance.database;
+    return await db.insert('transaksi', data);
+  }
+
+  Future<int> getTotalSaldo() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('SELECT SUM(saldo) as total FROM dompet');
+
+    // Jika hasil null atau kosong, kembalikan 0
+    return result.first['total'] != null ? result.first['total'] as int : 0;
+  }
+
+
   Future close() async {
     final db = await instance.database;
     db.close();
