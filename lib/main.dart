@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/screens/add_pemasukan.dart';
 import 'package:projek_pab_duit/screens/balance_page.dart';
+import 'package:projek_pab_duit/screens/detail_transaction.dart';
 import 'package:projek_pab_duit/screens/home_page.dart' as home;
 import 'package:projek_pab_duit/screens/loading_page.dart';
 import 'package:projek_pab_duit/screens/login.dart';
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => Login(),
         '/home': (context) => const home.HomePage(),
         '/add': (context) => AddPemasukanPage(),
-        '/balance': (context) => WalletScreen()
+        '/balance': (context) => WalletScreen(),
+        '/detail': (context) => DetailTransactionPage(),
       },
     );
   }

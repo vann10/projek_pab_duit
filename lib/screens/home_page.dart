@@ -62,30 +62,45 @@ class HomeContent extends StatelessWidget {
         date: 'Sep 02, 2022',
         amount: 45.0,
         logoAsset: 'assets/images/shell_logo.png',
+        onTap: () {
+          Navigator.pushNamed(context, '/detail');
+        },
       ),
       TransactionCard(
         merchantName: 'Shell',
         date: 'Sep 02, 2022',
         amount: 45.0,
         logoAsset: 'assets/images/shell_logo.png',
+        onTap: () {
+          Navigator.pushNamed(context, '/detail');
+        },
       ),
       TransactionCard(
         merchantName: 'Shell',
         date: 'Sep 02, 2022',
         amount: 45.0,
         logoAsset: 'assets/images/shell_logo.png',
+        onTap: () {
+          Navigator.pushNamed(context, '/detail');
+        },
       ),
       TransactionCard(
         merchantName: 'Shell',
         date: 'Sep 02, 2022',
         amount: 45.0,
         logoAsset: 'assets/images/shell_logo.png',
+        onTap: () {
+          Navigator.pushNamed(context, '/detail');
+        },
       ),
       TransactionCard(
         merchantName: 'Shell',
         date: 'Sep 02, 2022',
         amount: 45.0,
         logoAsset: 'assets/images/shell_logo.png',
+        onTap: () {
+          Navigator.pushNamed(context, '/detail');
+        },
       ),
     ];
 
@@ -150,6 +165,7 @@ class HomeContent extends StatelessWidget {
                       date: tx.date,
                       amount: tx.amount,
                       logoAsset: tx.logoAsset,
+                      onTap: tx.onTap,
                     );
                   },
                 ),
