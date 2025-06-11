@@ -4,8 +4,14 @@ import 'package:projek_pab_duit/screens/balance_page.dart';
 import 'package:projek_pab_duit/screens/home_page.dart' as home;
 import 'package:projek_pab_duit/screens/loading_page.dart';
 import 'package:projek_pab_duit/screens/login.dart';
+import 'package:projek_pab_duit/db/database_helper.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi database
+  final db = await DatabaseHelper.instance.database;
+  
   runApp(const MyApp());
 }
 
