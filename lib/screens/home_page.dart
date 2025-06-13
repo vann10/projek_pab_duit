@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:projek_pab_duit/db/database_helper.dart';
 import 'package:projek_pab_duit/screens/balance_page.dart';
-import 'package:projek_pab_duit/widgets/bottom_navbar.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
-import 'package:projek_pab_duit/widgets/transaction_card.dart';
-import 'package:projek_pab_duit/widgets/balance.dart';
-import 'package:projek_pab_duit/widgets/header.dart';
 import 'package:projek_pab_duit/widgets/add_button.dart';
+import 'package:projek_pab_duit/widgets/balance.dart';
+import 'package:projek_pab_duit/widgets/bottom_navbar.dart';
+import 'package:projek_pab_duit/widgets/header.dart';
+import 'package:projek_pab_duit/widgets/transaction_card.dart';
+
+class Transaksi {
+  final int id;
+  final String deskripsi;
+  final double jumlah;
+  final String tipe;
+  final String tanggal;
+
+  Transaksi({
+    required this.id,
+    required this.deskripsi,
+    required this.jumlah,
+    required this.tipe,
+    required this.tanggal,
+  });
+
+  factory Transaksi.fromMap(Map<String, dynamic> map) {
+    return Transaksi(
+      id: map['id'],
+      deskripsi: map['deskripsi'],
+      jumlah: map['jumlah'].toDouble(),
+      tipe: map['tipe'],
+      tanggal: map['tanggal'],
+    );
+  }
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,8 +45,8 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    HomeContent(),
-    WalletScreen(),
+    const HomeContent(),
+    walletPage(),
     statsPage(),
     profilePage(),
   ];
@@ -28,7 +55,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DarkColors.bg,
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: Stack(
         children: [
           _pages[_currentIndex],
@@ -51,59 +78,31 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<dynamic> transactionList = [
-      TransactionCard(
-        merchantName: 'Shell',
-        date: 'Sep 02, 2022',
-        amount: 45.0,
-        logoAsset: 'assets/images/shell_logo.png',
-        onTap: () {
-          Navigator.pushNamed(context, '/detail');
-        },
-      ),
-      TransactionCard(
-        merchantName: 'Shell',
-        date: 'Sep 02, 2022',
-        amount: 45.0,
-        logoAsset: 'assets/images/shell_logo.png',
-        onTap: () {
-          Navigator.pushNamed(context, '/detail');
-        },
-      ),
-      TransactionCard(
-        merchantName: 'Shell',
-        date: 'Sep 02, 2022',
-        amount: 45.0,
-        logoAsset: 'assets/images/shell_logo.png',
-        onTap: () {
-          Navigator.pushNamed(context, '/detail');
-        },
-      ),
-      TransactionCard(
-        merchantName: 'Shell',
-        date: 'Sep 02, 2022',
-        amount: 45.0,
-        logoAsset: 'assets/images/shell_logo.png',
-        onTap: () {
-          Navigator.pushNamed(context, '/detail');
-        },
-      ),
-      TransactionCard(
-        merchantName: 'Shell',
-        date: 'Sep 02, 2022',
-        amount: 45.0,
-        logoAsset: 'assets/images/shell_logo.png',
-        onTap: () {
-          Navigator.pushNamed(context, '/detail');
-        },
-      ),
-    ];
+  State<HomeContent> createState() => _HomeContentState();
+}
 
+class _HomeContentState extends State<HomeContent> {
+  List<Transaksi> transaksiList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTransaksi();
+  }
+
+  Future<void> fetchTransaksi() async {
+    final data = await DatabaseHelper.instance.getAllTransaksi();
+    setState(() {
+      transaksiList = data;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
@@ -119,7 +118,6 @@ class HomeContent extends StatelessWidget {
               ),
             ),
           ),
-          // Background image
           Positioned(
             left: 0,
             right: 0,
@@ -136,12 +134,10 @@ class HomeContent extends StatelessWidget {
             children: [
               header(context),
               const SizedBox(height: 50),
-
               balance(),
               const SizedBox(height: 30),
-
-              Padding(
-                padding: const EdgeInsets.only(left: 25),
+              const Padding(
+                padding: EdgeInsets.only(left: 25),
                 child: Text(
                   "My Transactions",
                   style: TextStyle(
@@ -152,20 +148,25 @@ class HomeContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-
               Expanded(
                 child: ListView.builder(
                   physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.only(bottom: 100),
-                  itemCount: transactionList.length,
+                  padding: const EdgeInsets.only(bottom: 100),
+                  itemCount: transaksiList.length,
                   itemBuilder: (context, index) {
-                    final tx = transactionList[index];
+                    final tx = transaksiList[index];
+                    final formattedDate = DateTime.tryParse(tx.tanggal) != null
+                        ? '${DateTime.parse(tx.tanggal).day}/${DateTime.parse(tx.tanggal).month}/${DateTime.parse(tx.tanggal).year}'
+                        : tx.tanggal;
                     return TransactionCard(
-                      merchantName: tx.merchantName,
-                      date: tx.date,
-                      amount: tx.amount,
-                      logoAsset: tx.logoAsset,
-                      onTap: tx.onTap,
+                      merchantName: tx.deskripsi,
+                      date: formattedDate,
+                      amount: tx.jumlah,
+                      logoAsset: 'assets/images/shell_logo.png',
+                      tipe: tx.tipe,
+                      onTap: () {
+                        Navigator.pushNamed(context, '/detail');
+                      },
                     );
                   },
                 ),
@@ -201,19 +202,18 @@ class AppDrawer extends StatelessWidget {
                 stops: [0.0, 0.6, 0.8],
               ),
             ),
-
             accountName: const Text(
               'Kelompok 1',
               style: TextStyle(color: Colors.white),
             ),
-            accountEmail: Text(
+            accountEmail: const Text(
               'Kelompok1@gmail.com',
               style: TextStyle(color: Colors.white),
             ),
             currentAccountPicture: Container(
               width: 20,
               height: 20,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: DarkColors.oren,
               ),
@@ -256,13 +256,13 @@ class AppDrawer extends StatelessWidget {
 }
 
 Widget walletPage() {
-  return Center(child: Text("WalletPage"));
+  return const Center(child: Text("WalletPage"));
 }
 
 Widget statsPage() {
-  return Center(child: Text("StatsPage"));
+  return const Center(child: Text("StatsPage"));
 }
 
 Widget profilePage() {
-  return Center(child: Text("ProfilePage"));
+  return const Center(child: Text("ProfilePage"));
 }

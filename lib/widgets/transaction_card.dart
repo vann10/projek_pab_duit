@@ -5,6 +5,7 @@ class TransactionCard extends StatelessWidget {
   final String date;
   final double amount;
   final String logoAsset;
+  final String tipe;
   final Color backgroundColor;
   final Color accentColor;
   final VoidCallback onTap;
@@ -15,6 +16,7 @@ class TransactionCard extends StatelessWidget {
     required this.date,
     required this.amount,
     required this.logoAsset,
+    required this.tipe,
     required this.onTap,
     this.backgroundColor = const Color(0xFF141326),
     this.accentColor = const Color(0xFFFF6B35),
@@ -22,6 +24,9 @@ class TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final prefix = tipe == 'INCOME' ? '+' : '-';
+    final amountColor = tipe == 'INCOME' ? Colors.greenAccent : Colors.white;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -111,9 +116,9 @@ class TransactionCard extends StatelessWidget {
                         border: Border.all(color: Colors.white24),
                       ),
                       child: Text(
-                        '-\$${amount.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        '$prefix\$${amount.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          color: amountColor,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

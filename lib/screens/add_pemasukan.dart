@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:projek_pab_duit/db/database_helper.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:another_flushbar/flushbar.dart';
@@ -15,38 +17,62 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
   bool _isExpense = true;
   bool _showDropdown = false;
   String _description = '';
-  String _category = 'Makanan';
+  String _category = 'Makanan'; // Default kategori
   bool _isFlushbarShowing = false;
-  final List<String> _categories = [
-    'Makanan',
-    'Transportasi',
-    'Belanja',
-    'Gaji',
-    'Hiburan',
-    'Lainnya',
-  ];
+  bool _isSubmitting = false;
+
+  // Add TextEditingController for description
+  late TextEditingController _descriptionController;
+
+  List<String> _dropdownItems = [];
+  String? _selectedItem;
+
+  Future<void> _loadDropdownItems() async {
+    List<String> items = [];
+
+    if (_isExpense) {
+      // Ambil kategori bertipe EXPENSE atau BOTH
+      final kategoriList = await DatabaseHelper.instance.getKategoriByTipe("EXPENSE");
+      items = kategoriList.map((row) => row['nama'] as String).toList();
+    } else {
+      // Ambil semua dompet
+      final dompetList = await DatabaseHelper.instance.getAllDompet();
+      items = dompetList.map((row) => row['nama'] as String).toList();
+    }
+
+    setState(() {
+      _dropdownItems = items;
+      // Set item pertama sebagai selected item dan update category
+      if (items.isNotEmpty) {
+        _selectedItem = items.first;
+        _category = items.first;
+      } else {
+        _selectedItem = null;
+        _category = _isExpense ? 'Makanan' : 'Dompet Utama';
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController = TextEditingController();
+    // Panggil _loadDropdownItems saat widget pertama kali dibuat
+    _loadDropdownItems();
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   void _onNumberPress(String value) {
     final raw = _amount.replaceAll(',', '');
 
+    // Validasi maksimal 13 digit
     if (raw.length >= 13) {
-      if (!_isFlushbarShowing) {
-        _isFlushbarShowing = true;
-
-        Flushbar(
-          message: "Maksimal input adalah 13 digit",
-          duration: const Duration(seconds: 1),
-          animationDuration: const Duration(microseconds: 6),
-          flushbarStyle: FlushbarStyle.FLOATING,
-          backgroundColor: Colors.redAccent,
-          margin: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-          borderRadius: BorderRadius.circular(8),
-          flushbarPosition: FlushbarPosition.TOP,
-          icon: const Icon(Icons.warning, color: Colors.white),
-        ).show(context).then((_) {
-          _isFlushbarShowing = false;
-        });
-      }
+      _showMessage("Maksimal input adalah 13 digit", isError: true);
       return;
     }
 
@@ -54,7 +80,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
     final number = int.tryParse(newRaw) ?? 0;
 
     setState(() {
-      _amount = formatCurrency(number.toString());
+      _amount = _formatCurrency(number);
     });
   }
 
@@ -64,21 +90,31 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
       if (raw.isNotEmpty) {
         final newRaw = raw.substring(0, raw.length - 1);
         final number = int.tryParse(newRaw) ?? 0;
-        _amount = newRaw.isEmpty ? '' : formatCurrency(number.toString());
+        _amount = newRaw.isEmpty ? '' : _formatCurrency(number);
       }
     });
   }
 
-  String formatCurrency(String value) {
-    if (value.isEmpty) return '0';
-    final number = int.tryParse(value.replaceAll(',', '')) ?? 0;
+  // Perbaiki fungsi format currency
+  String _formatCurrency(int value) {
+    if (value == 0) return '';
     final formatter = NumberFormat('#,###');
-    return formatter.format(number);
+    return formatter.format(value);
+  }
+
+  // Helper untuk mendapatkan raw value
+  int _getRawAmount() {
+    final raw = _amount.replaceAll(',', '');
+    return int.tryParse(raw) ?? 0;
   }
 
   Widget numButton(String value, {VoidCallback? onPressed}) {
     return TextButton(
       onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.all(16),
+        minimumSize: const Size(60, 60),
+      ),
       child: Text(
         value,
         style: const TextStyle(fontSize: 28, color: Colors.white),
@@ -86,27 +122,119 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
     );
   }
 
-  void _submitForm() {
-    debugPrint('Amount: $_amount');
-    debugPrint('Description: $_description');
-    debugPrint('Category: $_category');
-    debugPrint('Type: ${_isExpense ? 'Expense' : 'Income'}');
-    Navigator.pop(context);
+  void _showMessage(String message, {bool isError = false}) {
+    if (_isFlushbarShowing) return;
+
+    _isFlushbarShowing = true;
+
+    Flushbar(
+      message: message,
+      duration: const Duration(seconds: 2),
+      animationDuration: const Duration(milliseconds: 600),
+      flushbarStyle: FlushbarStyle.FLOATING,
+      backgroundColor: isError ? Colors.redAccent : Colors.green,
+      margin: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      borderRadius: BorderRadius.circular(8),
+      flushbarPosition: FlushbarPosition.TOP,
+      icon: Icon(
+        isError ? Icons.error : Icons.check_circle,
+        color: Colors.white,
+      ),
+    ).show(context).then((_) {
+      if (mounted) {
+        _isFlushbarShowing = false;
+      }
+    });
+  }
+
+  Future<void> _submitForm() async {
+    // Mencegah double submit
+    if (_isSubmitting) return;
+
+    final jumlah = _getRawAmount();
+    final description = _descriptionController.text.trim();
+
+    // Validasi input
+    if (jumlah <= 0) {
+      _showMessage("Masukkan jumlah yang valid", isError: true);
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // Simpan ke database
+      final success = await DatabaseHelper.instance.insertTransaksiWithUpdateSaldo(
+        jumlah: jumlah,
+        kategori: _category,
+        deskripsi: description,
+        tipe: _isExpense ? 'EXPENSE' : 'INCOME',
+        dompetId: 1,
+      );
+
+      if (success) {
+        _showMessage(
+          "${_isExpense ? 'Pengeluaran' : 'Pemasukan'} berhasil disimpan!",
+        );
+
+        // Tunggu sebentar agar user bisa melihat pesan sukses
+        await Future.delayed(const Duration(milliseconds: 1000));
+
+        // Kembali ke halaman sebelumnya dengan result
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/home',
+            (Route<dynamic> route) => false, // Hapus semua route sebelumnya
+          );
+        }
+      } else {
+        _showMessage("Gagal menyimpan data", isError: true);
+      }
+    } catch (e) {
+      _showMessage("Terjadi kesalahan: ${e.toString()}", isError: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  // Fungsi untuk validasi input keyboard
+  void _onDescriptionChanged(String value) {
+    setState(() {
+      _description = value;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-    
+
     return Scaffold(
       backgroundColor: DarkColors.bg,
       resizeToAvoidBottomInset: false,
       // Add floating action button that's always visible
-      floatingActionButton: isKeyboardVisible ? FloatingActionButton(
-        onPressed: _submitForm,
-        backgroundColor: DarkColors.oren,
-        child: const Icon(Icons.check, color: Colors.white),
-      ) : null,
+      floatingActionButton: isKeyboardVisible
+          ? FloatingActionButton(
+              onPressed: _isSubmitting ? null : _submitForm,
+              backgroundColor: _isSubmitting ? Colors.grey : DarkColors.oren,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.check, color: Colors.white),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -132,8 +260,8 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
-                          ]
-                      ),
+                          ],
+                        ),
                       ),
 
                       // Income / Expense toggle
@@ -152,16 +280,17 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                           children: [
                             Expanded(
                               child: GestureDetector(
-                                onTap: () => setState(() => _isExpense = false),
+                                onTap: () async {
+                                  setState(() => _isExpense = false);
+                                  // Muat ulang dropdown ketika toggle berubah
+                                  await _loadDropdownItems();
+                                },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color:
-                                        !_isExpense
-                                            ? Colors.green
-                                            : Colors.transparent,
+                                    color: !_isExpense ? Colors.green : Colors.transparent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   alignment: Alignment.center,
@@ -174,16 +303,17 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                             ),
                             Expanded(
                               child: GestureDetector(
-                                onTap: () => setState(() => _isExpense = true),
+                                onTap: () async {
+                                  setState(() => _isExpense = true);
+                                  // Muat ulang dropdown ketika toggle berubah
+                                  await _loadDropdownItems();
+                                },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color:
-                                        _isExpense
-                                            ? Colors.red
-                                            : Colors.transparent,
+                                    color: _isExpense ? Colors.red : Colors.transparent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   alignment: Alignment.center,
@@ -207,7 +337,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                         },
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 120),
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
                             color: const Color.fromARGB(255, 58, 32, 119),
                             borderRadius: const BorderRadius.only(
@@ -221,17 +351,25 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  _category.isEmpty ? "Category" : _category,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
+                                Expanded(
+                                  child: Text(
+                                    _category,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const Icon(
-                                  Icons.arrow_drop_down,
+                                const SizedBox(width: 8),
+                                Icon(
+                                  _showDropdown ? Icons.arrow_drop_up : Icons.arrow_drop_down,
                                   color: Colors.white,
+                                  size: 20,
                                 ),
                               ],
                             ),
@@ -243,8 +381,8 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
 
                       Center(
                         child: Text(
-                          "${_isExpense ? '-' : '+'} Rp${_amount.isEmpty ? '0' : formatCurrency(_amount)}",
-                          style: const TextStyle(
+                          "${_isExpense ? '-' : '+'} Rp${_amount.isEmpty ? '0' : _amount}",
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
@@ -258,7 +396,9 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: TextField(
+                          controller: _descriptionController,
                           style: const TextStyle(color: Colors.white),
+                          maxLength: 100, // Batasi panjang deskripsi
                           decoration: const InputDecoration(
                             hintText: "Add Description",
                             hintStyle: TextStyle(color: Colors.white70),
@@ -268,9 +408,9 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                             focusedBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: DarkColors.oren),
                             ),
+                            counterStyle: TextStyle(color: Colors.white70),
                           ),
-                          onChanged:
-                              (value) => setState(() => _description = value),
+                          onChanged: _onDescriptionChanged,
                         ),
                       ),
 
@@ -291,36 +431,65 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                             bottomLeft: Radius.circular(10),
                             bottomRight: Radius.circular(10),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        child: Column(
-                          children:
-                              _categories
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.3,
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: _dropdownItems
                                   .map(
-                                    (category) => InkWell(
+                                    (item) => InkWell(
                                       onTap: () {
                                         setState(() {
-                                          _category = category;
+                                          _selectedItem = item;
+                                          _category = item;
                                           _showDropdown = false;
                                         });
                                       },
                                       child: Container(
                                         width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: _dropdownItems.length > 5 ? 10 : 12, 
                                           horizontal: 16,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minHeight: 40,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _selectedItem == item
+                                              ? Colors.white.withOpacity(0.2)
+                                              : Colors.transparent,
                                         ),
                                         child: Center(
                                           child: Text(
-                                            category,
-                                            style: const TextStyle(
-                                              color: Colors.white,
+                                            item,
+                                            style: TextStyle(
+                                              color: _selectedItem == item ? Colors.white : Colors.white70,
+                                              fontWeight: _selectedItem == item
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                              fontSize: _dropdownItems.length > 7 ? 14 : 16,
                                             ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ),
                                     ),
                                   )
                                   .toList(),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -359,6 +528,10 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                           // Backspace
                           TextButton(
                             onPressed: _onBackspace,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(16),
+                              minimumSize: const Size(60, 60),
+                            ),
                             child: const Icon(
                               Icons.backspace,
                               color: Colors.white,
@@ -371,15 +544,28 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
 
                           // OK
                           TextButton(
-                            onPressed: _submitForm,
-                            child: const Text(
-                              'OK',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            onPressed: _isSubmitting ? null : _submitForm,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(16),
+                              minimumSize: const Size(60, 60),
                             ),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'OK',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ],
                       ),
