@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
 import 'package:projek_pab_duit/screens/balance_page.dart';
+import 'package:projek_pab_duit/screens/insight_page.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/widgets/add_button.dart';
 import 'package:projek_pab_duit/widgets/balance.dart';
@@ -46,8 +47,8 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = [
     const HomeContent(),
-    walletPage(),
-    statsPage(),
+    const WalletScreen(),
+    const InsightPage(),
     profilePage(),
   ];
 
@@ -155,9 +156,10 @@ class _HomeContentState extends State<HomeContent> {
                   itemCount: transaksiList.length,
                   itemBuilder: (context, index) {
                     final tx = transaksiList[index];
-                    final formattedDate = DateTime.tryParse(tx.tanggal) != null
-                        ? '${DateTime.parse(tx.tanggal).day}/${DateTime.parse(tx.tanggal).month}/${DateTime.parse(tx.tanggal).year}'
-                        : tx.tanggal;
+                    final formattedDate =
+                        DateTime.tryParse(tx.tanggal) != null
+                            ? '${DateTime.parse(tx.tanggal).day}/${DateTime.parse(tx.tanggal).month}/${DateTime.parse(tx.tanggal).year}'
+                            : tx.tanggal;
                     return TransactionCard(
                       merchantName: tx.deskripsi,
                       date: formattedDate,
