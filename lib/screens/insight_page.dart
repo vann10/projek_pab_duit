@@ -44,7 +44,7 @@ class InsightPage extends StatelessWidget {
           ),
         ),
         // Panggil widget dari file terpisah di sini
-        body: const TabBarView(children: [StatisticsView(), SavingsPlanView()]),
+        body: const TabBarView(children: [StatisticsScreen(), SavingsPlanView()]),
       ),
     );
   }
