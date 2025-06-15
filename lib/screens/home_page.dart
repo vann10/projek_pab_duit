@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
 import 'package:projek_pab_duit/screens/balance_page.dart';
+import 'package:projek_pab_duit/screens/detail_transaction.dart';
 import 'package:projek_pab_duit/screens/insight_page.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:projek_pab_duit/widgets/add_button.dart';
@@ -16,6 +17,9 @@ class Transaksi {
   final double jumlah;
   final String tipe;
   final String tanggal;
+  final String? kategoriNama;
+  final String? kategoriTipe;
+  final String? dompetNama;
 
   Transaksi({
     required this.id,
@@ -23,18 +27,25 @@ class Transaksi {
     required this.jumlah,
     required this.tipe,
     required this.tanggal,
+    this.kategoriNama,
+    this.kategoriTipe,
+    this.dompetNama,
   });
 
   factory Transaksi.fromMap(Map<String, dynamic> map) {
     return Transaksi(
       id: map['id'],
-      deskripsi: map['deskripsi'],
-      jumlah: map['jumlah'].toDouble(),
-      tipe: map['tipe'],
-      tanggal: map['tanggal'],
+      deskripsi: map['deskripsi'] ?? '-',
+      jumlah: (map['jumlah'] as num).toDouble(),
+      tipe: map['tipe'] ?? '',
+      tanggal: map['tanggal'] ?? '',
+      kategoriNama: map['kategori_nama'],
+      kategoriTipe: map['kategori_tipe'],
+      dompetNama: map['dompet_nama'],
     );
   }
 }
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -97,7 +108,7 @@ class _HomeContentState extends State<HomeContent> {
   }
 
   Future<void> fetchTransaksi() async {
-    final data = await DatabaseHelper.instance.getAllTransaksi();
+    final data = await DatabaseHelper.instance.getAllTransaksiList();
     setState(() {
       transaksiList = data;
     });
@@ -162,13 +173,31 @@ class _HomeContentState extends State<HomeContent> {
                             ? '${DateTime.parse(tx.tanggal).day}/${DateTime.parse(tx.tanggal).month}/${DateTime.parse(tx.tanggal).year}'
                             : tx.tanggal;
                     return TransactionCard(
-                      merchantName: tx.deskripsi,
+                      merchantName: tx.kategoriNama ?? '',
                       date: formattedDate,
+                      deskripsi: tx.deskripsi,
                       amount: tx.jumlah,
                       logoAsset: 'assets/images/shell_logo.png',
                       tipe: tx.tipe,
                       onTap: () {
-                        Navigator.pushNamed(context, '/detail');
+                        // Pass transaction data to detail page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetailTransactionPage(
+                              transactionData: {
+                                'id': tx.id,
+                                'tanggal': tx.tanggal,
+                                'jumlah': tx.jumlah,
+                                'deskripsi': tx.deskripsi,
+                                'tipe': tx.tipe,
+                                'kategori_nama': tx.kategoriNama,
+                                'kategori_tipe': tx.kategoriTipe,
+                                'dompet_nama': tx.dompetNama,
+                              },
+                            ),
+                          ),
+                        );
                       },
                     );
                   },

@@ -16,7 +16,7 @@ Widget buildIcon({
       child: Transform.translate(
         offset: const Offset(0, -10),
         child: Transform.scale(
-          scale: isSelected ? 1.3 : 1,
+          scale: isSelected ? 1.5 : 1.3,
           alignment: Alignment.center,
           child: Icon(
             icon,

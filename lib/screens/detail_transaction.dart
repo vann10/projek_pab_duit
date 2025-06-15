@@ -1,19 +1,23 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:projek_pab_duit/db/database_helper.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:intl/intl.dart';
 
 class CategoryItem {
+  final int id;
   final String name;
   final IconData icon;
   final Color color;
 
-  CategoryItem({required this.name, required this.icon, required this.color});
+  CategoryItem({required this.id, required this.name, required this.icon, required this.color});
 }
 
 class DetailTransactionPage extends StatefulWidget {
-  const DetailTransactionPage({super.key});
+  final Map<String, dynamic>? transactionData;
+  
+  const DetailTransactionPage({super.key, this.transactionData});
 
   @override
   State<DetailTransactionPage> createState() => _DetailTransactionPageState();
@@ -33,47 +37,128 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   OverlayEntry? _paymentOverlayEntry;
   final LayerLink _paymentLayerLink = LayerLink();
 
-  final List<CategoryItem> _categories = [
-    CategoryItem(
-      name: 'Kebutuhan',
-      icon: Icons.shopping_cart,
-      color: Colors.cyan,
-    ),
-    CategoryItem(name: 'Pakaian', icon: Icons.checkroom, color: Colors.purple),
-    CategoryItem(
-      name: 'Elektronik',
-      icon: Icons.desktop_windows,
-      color: Colors.orange,
-    ),
-    CategoryItem(name: 'Investasi', icon: Icons.bar_chart, color: Colors.amber),
-    CategoryItem(name: 'Kehidupunk', icon: Icons.people, color: Colors.green),
-    CategoryItem(
-      name: 'Transportasi',
-      icon: Icons.directions_bus,
-      color: Colors.red,
-    ),
+  final List<CategoryItem> _categoriesExpense = [
+    CategoryItem(id: 1, name: 'Makanan', icon: Icons.fastfood, color: Colors.orange),
+    CategoryItem(id: 2, name: 'Kebutuhan', icon: Icons.shopping_cart, color: Colors.cyan),
+    CategoryItem(id: 3, name: 'Pakaian', icon: Icons.checkroom, color: Colors.purple),
+    CategoryItem(id: 4, name: 'Tabungan', icon: Icons.bar_chart, color: Colors.amber),
+    CategoryItem(id: 5, name: 'Sosial', icon: Icons.people, color: Colors.green),
+    CategoryItem(id: 6, name: 'Transportasi', icon: Icons.directions_bus, color: Colors.red),
+    CategoryItem(id: 7, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+  ];
+  final List<CategoryItem> _categoriesIncome = [
+    CategoryItem(id: 8, name: 'Gaji', icon: Icons.paid, color: Colors.green),
+    CategoryItem(id: 9, name: 'Bonus', icon: Icons.redeem, color: Colors.cyan),
+    CategoryItem(id: 10, name: 'Uang Saku', icon: Icons.payment, color: Colors.orange),
+    CategoryItem(id: 11, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
   ];
   late CategoryItem _selectedCategory;
+  late List<CategoryItem> _categories;
 
   // Payment Methods
-  String _selectedPaymentMethod = 'Uang Tunai';
-  final List<String> _paymentMethods = [
-    'Uang Tunai',
-    'Kartu Kredit',
-    'Transfer Bank',
-    'E-Wallet',
-  ];
+  String? _selectedPaymentMethod;
+  int? _selectedPaymentMethodId;
+  List<Map<String, dynamic>> _paymentMethods = [];
+  bool _isLoadingPaymentMethods = true;
+
+  Future<void> _loadPaymentMethods() async {
+    try {
+      // Ganti dengan service database Anda untuk query: SELECT id, nama, saldo FROM dompet
+      final response = await DatabaseHelper.instance.getAllDompet(); 
+      
+      if (response != null && response.isNotEmpty) {
+        setState(() {
+          _paymentMethods = response;
+          _isLoadingPaymentMethods = false;
+          
+          // Set default payment method
+          if (widget.transactionData != null) {
+            final dompetNama = widget.transactionData!['dompet_nama'];
+            final selectedDompet = _paymentMethods.firstWhere(
+              (dompet) => dompet['nama'] == dompetNama,
+              orElse: () => _paymentMethods.first,
+            );
+            _selectedPaymentMethod = selectedDompet['nama'];
+            _selectedPaymentMethodId = selectedDompet['id'];
+          } else {
+            _selectedPaymentMethod = _paymentMethods.first['nama'];
+            _selectedPaymentMethodId = _paymentMethods.first['id'];
+          }
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingPaymentMethods = false;
+      });
+      print('Error loading payment methods: $e');
+    }
+  }
+  String formatRupiah(double amount, {String prefix = 'Rp'}) {
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: prefix,
+      decimalDigits: 0,
+    );
+    return formatter.format(amount);
+  }
 
   @override
   void initState() {
     super.initState();
-    _selectedDateTime = DateTime.now();
-    _selectedCategory = _categories.firstWhere(
-      (item) => item.name == 'Kebutuhan',
-    );
+    _loadPaymentMethods();
+    
+    // Initialize with transaction data if available
+    if (widget.transactionData != null) {
+      final data = widget.transactionData!;
 
-    _amountController = TextEditingController(text: 'Rp500');
-    _descriptionController = TextEditingController(text: 'Judol');
+      if(data['tipe'] == 'EXPENSE'){
+        _categories = _categoriesExpense;
+      } else _categories = _categoriesIncome;
+      
+      // Parse date
+      if (data['tanggal'] != null) {
+        try {
+          _selectedDateTime = DateTime.parse(data['tanggal']);
+        } catch (e) {
+          _selectedDateTime = DateTime.now();
+        }
+      } else {
+        _selectedDateTime = DateTime.now();
+      }
+      
+      // Set amount
+      final amount = data['jumlah'] ?? 0.0;
+      _amountController = TextEditingController(
+        text: formatRupiah(amount.toDouble())
+      );
+      
+      // Set description
+      _descriptionController = TextEditingController(
+        text: data['deskripsi'] ?? ''
+      );
+      
+      // Set category based on kategori_nama or default to first category
+      final kategoriNama = data['kategori_nama'];
+      _selectedCategory = _categories.firstWhere(
+        (item) => item.name.toLowerCase() == kategoriNama?.toLowerCase(),
+        orElse: () => _categories.first,
+      );
+      
+      // Set payment method based on dompet_nama or default
+      final dompetNama = data['dompet_nama'];
+      if (dompetNama != null && _paymentMethods.contains(dompetNama)) {
+        _selectedPaymentMethod = dompetNama;
+      }
+      
+    } else {
+      // Default values for new transaction
+      _selectedDateTime = DateTime.now();
+      _selectedCategory = _categories.firstWhere(
+        (item) => item.name == 'Makanan',
+      );
+      _amountController = TextEditingController(text: 'Rp0');
+      _descriptionController = TextEditingController(text: '-');
+    }
   }
 
   // Category Overlay Methods
@@ -275,26 +360,42 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
     );
   }
 
-  Widget _buildPaymentMethodRow(String method) {
+  Widget _buildPaymentMethodRow(Map<String, dynamic> method) {
+    final methodName = method['nama'];
+    final methodId = method['id'];
+    final saldo = method['saldo'];
+    
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedPaymentMethod = method;
+          _selectedPaymentMethod = methodName;
+          _selectedPaymentMethodId = methodId;
         });
         _removePaymentOverlay();
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Text(
-          method,
-          style: TextStyle(
-            color:
-                _selectedPaymentMethod == method
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              methodName,
+              style: TextStyle(
+                color: _selectedPaymentMethod == methodName
                     ? DarkColors.oren
                     : Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              formatRupiah(saldo.toDouble()),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -332,6 +433,8 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   void dispose() {
     _removeCategoryOverlay();
     _removePaymentOverlay();
+    _amountController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -372,9 +475,9 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                         Navigator.pop(context);
                       },
                     ),
-                    const Text(
-                      'Detail Transaksi',
-                      style: TextStyle(
+                    Text(
+                      widget.transactionData != null ? 'Detail Transaksi' : 'Tambah Transaksi',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -383,10 +486,6 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                     IconButton(
                       icon: const Icon(Icons.check, color: Colors.white),
                       onPressed: () {
-                        developer.log('$_amountController.text');
-                        developer.log('$_descriptionController.text');
-                        developer.log('$_selectedCategory.text');
-                        developer.log('$_selectedPaymentMethod');
                         Navigator.pop(context);
                       },
                     ),
@@ -542,50 +641,52 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                 const SizedBox(height: 16),
 
                 // Payment Method Custom Dropdown
-                CompositedTransformTarget(
-                  link: _paymentLayerLink,
-                  child: _buildDetailCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'METODE PEMBAYARAN',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: _showPaymentOverlay,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _selectedPaymentMethod,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                if (widget.transactionData == null || widget.transactionData!['tipe'] == 'EXPENSE')
+                  CompositedTransformTarget(
+                    link: _paymentLayerLink,
+                    child: _buildDetailCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'METODE PEMBAYARAN',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _showPaymentOverlay,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _selectedPaymentMethod ?? 'Loading...',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Icon(
-                                _isPaymentOverlayVisible
-                                    ? Icons.arrow_drop_up
-                                    : Icons.arrow_drop_down,
-                                color: DarkColors.oren,
-                              ),
-                            ],
+                                Icon(
+                                  _isPaymentOverlayVisible
+                                      ? Icons.arrow_drop_up
+                                      : Icons.arrow_drop_down,
+                                  color: DarkColors.oren,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const Divider(
-                          color: DarkColors.oren,
-                          thickness: 1,
-                          height: 24,
-                        ),
-                      ],
+                          const Divider(
+                            color: DarkColors.oren,
+                            thickness: 1,
+                            height: 24,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                if (widget.transactionData == null || widget.transactionData!['tipe'] == 'EXPENSE')
+                  const SizedBox(height: 16),
 
                 // Description
                 _buildDetailCard(

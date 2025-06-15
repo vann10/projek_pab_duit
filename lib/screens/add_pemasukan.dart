@@ -16,8 +16,8 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
   String _amount = '';
   bool _isExpense = true;
   bool _showDropdown = false;
-  String _description = '';
-  String _category = 'Makanan'; // Default kategori
+  String _description = '-';
+  String _category = 'Makanan';
   bool _isFlushbarShowing = false;
   bool _isSubmitting = false;
 
@@ -36,7 +36,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
       items = kategoriList.map((row) => row['nama'] as String).toList();
     } else {
       // Ambil semua dompet
-      final dompetList = await DatabaseHelper.instance.getAllDompet();
+      final dompetList = await DatabaseHelper.instance.getKategoriByTipe("INCOME");
       items = dompetList.map((row) => row['nama'] as String).toList();
     }
 
@@ -57,7 +57,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
   void initState() {
     super.initState();
     _descriptionController = TextEditingController();
-    // Panggil _loadDropdownItems saat widget pertama kali dibuat
     _loadDropdownItems();
   }
 
@@ -169,7 +168,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
       final success = await DatabaseHelper.instance.insertTransaksiWithUpdateSaldo(
         jumlah: jumlah,
         kategori: _category,
-        deskripsi: description,
+        deskripsi: _description,
         tipe: _isExpense ? 'EXPENSE' : 'INCOME',
         dompetId: 1,
       );

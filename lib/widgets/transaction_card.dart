@@ -1,8 +1,10 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 class TransactionCard extends StatelessWidget {
   final String merchantName;
   final String date;
+  final String deskripsi;
   final double amount;
   final String logoAsset;
   final String tipe;
@@ -14,6 +16,7 @@ class TransactionCard extends StatelessWidget {
     super.key,
     required this.merchantName,
     required this.date,
+    required this.deskripsi,
     required this.amount,
     required this.logoAsset,
     required this.tipe,
@@ -21,11 +24,19 @@ class TransactionCard extends StatelessWidget {
     this.backgroundColor = const Color(0xFF141326),
     this.accentColor = const Color(0xFFFF6B35),
   });
+  String formatRupiah(double amount, {String prefix = 'Rp'}) {
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: prefix,
+      decimalDigits: 0,
+    );
+    return formatter.format(amount);
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    final prefix = tipe == 'INCOME' ? '+' : '-';
-    final amountColor = tipe == 'INCOME' ? Colors.greenAccent : Colors.white;
+    final amountColor = tipe == 'INCOME' ? Colors.greenAccent : Colors.red;
 
     return Material(
       color: Colors.transparent,
@@ -94,7 +105,14 @@ class TransactionCard extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          Text(
+                            deskripsi,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
                           Text(
                             date,
                             style: TextStyle(
@@ -116,7 +134,7 @@ class TransactionCard extends StatelessWidget {
                         border: Border.all(color: Colors.white24),
                       ),
                       child: Text(
-                        '$prefix\$${amount.toStringAsFixed(0)}',
+                        formatRupiah(amount),
                         style: TextStyle(
                           color: amountColor,
                           fontSize: 16,

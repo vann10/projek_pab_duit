@@ -26,57 +26,65 @@ class DatabaseHelper {
   }
 
   Future<void> _createDB(Database db, int version) async {
-    // Tabel kategori
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS kategori (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nama TEXT NOT NULL,
-        tipe TEXT NOT NULL
-      )
-    ''');
+    try {
+      // Tabel kategori
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS kategori (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nama TEXT NOT NULL,
+          tipe TEXT NOT NULL
+        )
+      ''');
 
-    // Tabel dompet
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS dompet (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nama TEXT NOT NULL,
-        saldo INTEGER NOT NULL
-      )
-    ''');
+      // Tabel dompet
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS dompet (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nama TEXT NOT NULL,
+          saldo INTEGER NOT NULL
+        )
+      ''');
 
-    // Tabel transaksi
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS transaksi (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tanggal TEXT NOT NULL,
-        jumlah INTEGER NOT NULL,
-        kategori_id INTEGER,
-        deskripsi TEXT,
-        tipe TEXT NOT NULL,
-        dompet_id INTEGER,
-        FOREIGN KEY (kategori_id) REFERENCES kategori (id),
-        FOREIGN KEY (dompet_id) REFERENCES dompet (id)
-      )
-    ''');
+      // Tabel transaksi
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS transaksi (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          tanggal TEXT NOT NULL,
+          jumlah INTEGER NOT NULL,
+          kategori_id INTEGER,
+          deskripsi TEXT,
+          tipe TEXT NOT NULL,
+          dompet_id INTEGER,
+          FOREIGN KEY (kategori_id) REFERENCES kategori (id),
+          FOREIGN KEY (dompet_id) REFERENCES dompet (id)
+        )
+      ''');
 
-    // Insert dompet default
-    await db.insert('dompet', {
-      'nama': 'Dompet Utama',
-      'saldo': 0,
-    });
+      await db.insert('dompet', {
+          'nama': 'Dompet Utama',
+          'saldo': 0,
+      });
 
-    // Insert kategori default
-    final List<Map<String, dynamic>> defaultKategori = [
-      {'nama': 'Makanan', 'tipe': 'EXPENSE'},
-      {'nama': 'Transportasi', 'tipe': 'EXPENSE'},
-      {'nama': 'Belanja', 'tipe': 'EXPENSE'},
-      {'nama': 'Hiburan', 'tipe': 'EXPENSE'},
-      {'nama': 'Gaji', 'tipe': 'INCOME'},
-      {'nama': 'Lainnya', 'tipe': 'BOTH'},
-    ];
+      List<Map<String, String>> kategoriList = [
+        {'nama': 'Makanan', 'tipe': 'EXPENSE'},
+        {'nama': 'Kebutuhan', 'tipe': 'EXPENSE'},
+        {'nama': 'Pakaian', 'tipe': 'EXPENSE'},
+        {'nama': 'Tabungan', 'tipe': 'EXPENSE'},
+        {'nama': 'Sosial', 'tipe': 'EXPENSE'},
+        {'nama': 'Transportasi', 'tipe': 'EXPENSE'},
+        {'nama': 'Lainnya', 'tipe': 'EXPENSE'},
+        {'nama': 'Gaji', 'tipe': 'INCOME'},
+        {'nama': 'Bonus', 'tipe': 'INCOME'},
+        {'nama': 'Uang Saku', 'tipe': 'INCOME'},
+        {'nama': 'Lainnya', 'tipe': 'INCOME'}
+      ];
 
-    for (var kategori in defaultKategori) {
-      await db.insert('kategori', kategori);
+      for (var kategori in kategoriList) {
+        await db.insert('kategori', kategori);
+      }
+
+    } catch (e) {
+      print("❌ Error saat membuat database: $e");
     }
   }
 
@@ -182,15 +190,104 @@ class DatabaseHelper {
     ''', [limit]);
   }
 
-  Future<List<Transaksi>> getAllTransaksi() async {
+  Future<List<Map<String, dynamic>>> getAllTransaksiAsMap() async {
     final db = await database;
-    final result = await db.query('transaksi', orderBy: 'tanggal DESC');
-    return result.map((json) => Transaksi.fromMap(json)).toList();
+    return await db.rawQuery('''
+      SELECT 
+        t.*,
+        k.nama as kategori_nama,
+        k.tipe as kategori_tipe,
+        d.nama as dompet_nama
+      FROM transaksi t
+      LEFT JOIN kategori k ON t.kategori_id = k.id
+      LEFT JOIN dompet d ON t.dompet_id = d.id
+      ORDER BY t.tanggal DESC
+    ''');
   }
 
+  Future<List<Transaksi>> getAllTransaksiList() async {
+    final maps = await getAllTransaksiAsMap();
+
+    return maps.map((map) => Transaksi.fromMap(map)).toList();
+  }
 
   Future close() async {
     final db = await instance.database;
     db.close();
+  }
+
+  Future<bool> updateTransaksiById({
+    required int id,
+    required int jumlahBaru,
+    required String kategoriBaru,
+    required String deskripsiBaru,
+    required String tipe,
+    required int dompetId,
+  }) async {
+    final db = await instance.database;
+
+    try {
+      await db.transaction((txn) async {
+        // Ambil transaksi lama
+        final oldTransaksi = await txn.query(
+          'transaksi',
+          where: 'id = ?',
+          whereArgs: [id],
+          limit: 1,
+        );
+
+        if (oldTransaksi.isEmpty) {
+          throw Exception("Transaksi tidak ditemukan");
+        }
+
+        final oldData = oldTransaksi.first;
+        final int jumlahLama = oldData['jumlah'] as int;
+        final String tipeLama = oldData['tipe'] as String;
+
+        // Kembalikan saldo berdasarkan transaksi lama
+        final int saldoReversal = tipeLama == 'INCOME' ? -jumlahLama : jumlahLama;
+        await txn.rawUpdate(
+          'UPDATE dompet SET saldo = saldo + ? WHERE id = ?',
+          [saldoReversal, dompetId],
+        );
+
+        // Ambil kategori_id baru
+        final kategoriResult = await txn.query(
+          'kategori',
+          where: 'nama = ?',
+          whereArgs: [kategoriBaru],
+          limit: 1,
+        );
+        if (kategoriResult.isEmpty) throw Exception("Kategori tidak ditemukan");
+        final kategoriIdBaru = kategoriResult.first['id'] as int;
+
+        // Update transaksi
+        await txn.update(
+          'transaksi',
+          {
+            'jumlah': jumlahBaru,
+            'kategori_id': kategoriIdBaru,
+            'deskripsi': deskripsiBaru,
+            'tipe': tipe,
+            'tanggal': DateTime.now().toIso8601String(),
+            'dompet_id': dompetId,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+
+        // Update saldo dompet dengan transaksi baru
+        final int saldoBaru = tipe == 'INCOME' ? jumlahBaru : -jumlahBaru;
+        await txn.rawUpdate(
+          'UPDATE dompet SET saldo = saldo + ? WHERE id = ?',
+          [saldoBaru, dompetId],
+        );
+      });
+
+      return true;
+    } catch (e) {
+      print('❌ Error saat update transaksi: $e');
+      return false;
+    }
   }
 }
