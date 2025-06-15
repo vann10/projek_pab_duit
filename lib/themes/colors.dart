@@ -33,4 +33,9 @@ class GradientColors {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
+  static const LinearGradient gradient4 = LinearGradient(
+    colors: [Color(0xFF3C55E3), Color(0xFF1E2B74)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 }

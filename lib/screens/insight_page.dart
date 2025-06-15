@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/screens/saving_plan_page.dart';
 import 'package:projek_pab_duit/screens/statistic_page.dart';
@@ -34,6 +36,7 @@ class InsightPage extends StatelessWidget {
           bottom: TabBar(
             indicatorColor: DarkColors.oren,
             indicatorWeight: 3,
+            indicatorSize: TabBarIndicatorSize.tab,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             labelStyle: const TextStyle(
@@ -43,8 +46,9 @@ class InsightPage extends StatelessWidget {
             tabs: const [Tab(text: 'Statistics'), Tab(text: 'Savings plan')],
           ),
         ),
-        // Panggil widget dari file terpisah di sini
-        body: const TabBarView(children: [StatisticsScreen(), SavingsPlanView()]),
+        body: const TabBarView(
+          children: [StatisticsScreen(), SavingsPlanView()],
+        ),
       ),
     );
   }

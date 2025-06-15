@@ -8,6 +8,7 @@ import 'package:projek_pab_duit/widgets/balance.dart';
 import 'package:projek_pab_duit/widgets/bottom_navbar.dart';
 import 'package:projek_pab_duit/widgets/header.dart';
 import 'package:projek_pab_duit/widgets/transaction_card.dart';
+import 'package:projek_pab_duit/screens/profile_page.dart';
 
 class Transaksi {
   final int id;
@@ -49,7 +50,7 @@ class _HomePageState extends State<HomePage> {
     const HomeContent(),
     const WalletScreen(),
     const InsightPage(),
-    profilePage(),
+    const UserProfileScreen(),
   ];
 
   @override
