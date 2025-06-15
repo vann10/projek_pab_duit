@@ -5,7 +5,7 @@ class TransactionCard extends StatelessWidget {
   final String merchantName;
   final String date;
   final String deskripsi;
-  final double amount;
+  final int amount;
   final String logoAsset;
   final String tipe;
   final Color backgroundColor;
@@ -24,7 +24,7 @@ class TransactionCard extends StatelessWidget {
     this.backgroundColor = const Color(0xFF141326),
     this.accentColor = const Color(0xFFFF6B35),
   });
-  String formatRupiah(double amount, {String prefix = 'Rp'}) {
+  String formatRupiah(int amount, {String prefix = 'Rp'}) {
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: prefix,

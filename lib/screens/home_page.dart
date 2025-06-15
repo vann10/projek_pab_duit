@@ -14,7 +14,7 @@ import 'package:projek_pab_duit/screens/profile_page.dart';
 class Transaksi {
   final int id;
   final String deskripsi;
-  final double jumlah;
+  final int jumlah;
   final String tipe;
   final String tanggal;
   final String? kategoriNama;
@@ -36,7 +36,7 @@ class Transaksi {
     return Transaksi(
       id: map['id'],
       deskripsi: map['deskripsi'] ?? '-',
-      jumlah: (map['jumlah'] as num).toDouble(),
+      jumlah: (map['jumlah'] as num).toInt(),
       tipe: map['tipe'] ?? '',
       tanggal: map['tanggal'] ?? '',
       kategoriNama: map['kategori_nama'],

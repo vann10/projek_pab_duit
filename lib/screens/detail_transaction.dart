@@ -93,7 +93,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
       print('Error loading payment methods: $e');
     }
   }
-  String formatRupiah(double amount, {String prefix = 'Rp'}) {
+  String formatRupiah(int amount, {String prefix = 'Rp'}) {
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: prefix,
@@ -129,7 +129,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
       // Set amount
       final amount = data['jumlah'] ?? 0.0;
       _amountController = TextEditingController(
-        text: formatRupiah(amount.toDouble())
+        text: formatRupiah(amount)
       );
       
       // Set description
@@ -389,7 +389,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
               ),
             ),
             Text(
-              formatRupiah(saldo.toDouble()),
+              formatRupiah(saldo),
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 14,
