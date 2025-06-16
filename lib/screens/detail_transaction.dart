@@ -1,7 +1,7 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
+import 'package:projek_pab_duit/screens/home_page.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
 import 'package:intl/intl.dart';
 
@@ -12,6 +12,63 @@ class CategoryItem {
   final Color color;
 
   CategoryItem({required this.id, required this.name, required this.icon, required this.color});
+}
+
+class CurrencyInputFormatter extends TextInputFormatter {
+  final String Function(int) formatFunction;
+  
+  CurrencyInputFormatter({required this.formatFunction});
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Jika teks kosong atau hanya berisi "Rp", set ke "Rp0"
+    if (newValue.text.isEmpty || newValue.text == 'Rp') {
+      return TextEditingValue(
+        text: formatFunction(0),
+        selection: TextSelection.collapsed(offset: formatFunction(0).length),
+      );
+    }
+
+    // Jika user mencoba menghapus "Rp", kembalikan ke nilai lama
+    if (!newValue.text.startsWith('Rp')) {
+      return oldValue;
+    }
+
+    // Ambil bagian numerik saja (hapus "Rp" dan karakter non-digit)
+    String digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    
+    // Jika tidak ada digit, set ke "0"
+    if (digitsOnly.isEmpty) {
+      digitsOnly = '0';
+    }
+
+    // Hapus leading zeros kecuali jika hanya "0"
+    if (digitsOnly.length > 1 && digitsOnly.startsWith('0')) {
+      digitsOnly = digitsOnly.replaceFirst(RegExp(r'^0+'), '');
+      if (digitsOnly.isEmpty) {
+        digitsOnly = '0';
+      }
+    }
+
+    // Convert ke int dan format menggunakan fungsi yang sudah ada
+    int numericValue = int.tryParse(digitsOnly) ?? 0;
+    String formattedText = formatFunction(numericValue);
+    
+    // Set cursor ke akhir text
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
+
+// Helper function untuk mengambil nilai numerik dari formatted text
+int getNumericValue(String formattedText) {
+  String digitsOnly = formattedText.replaceAll(RegExp(r'[^\d]'), '');
+  return int.tryParse(digitsOnly) ?? 0;
 }
 
 class DetailTransactionPage extends StatefulWidget {
@@ -144,7 +201,6 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
         orElse: () => _categories.first,
       );
       
-      // Set payment method based on dompet_nama or default
       final dompetNama = data['dompet_nama'];
       if (dompetNama != null && _paymentMethods.contains(dompetNama)) {
         _selectedPaymentMethod = dompetNama;
@@ -483,12 +539,43 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.check, color: Colors.white),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
+                    // Ganti IconButton check yang sudah ada dengan ini:
+IconButton(
+  icon: const Icon(Icons.check, color: Colors.white),
+  onPressed: () async {
+    if (widget.transactionData != null) {
+      
+      String amountText = _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
+      int jumlah = getNumericValue(_amountController.text);
+      
+      // Tentukan tipe transaksi
+      String tipe = _categories == _categoriesIncome ? 'INCOME' : 'EXPENSE';
+      
+      // Panggil updateTransaksiById langsung
+      bool success = await DatabaseHelper.instance.updateTransaksiById(
+        id: widget.transactionData!['id'],
+        jumlahBaru: jumlah,
+        kategoriBaru: _selectedCategory.name,
+        deskripsiBaru: _descriptionController.text.trim(),
+        tipe: tipe,
+        dompetId: _selectedPaymentMethodId ?? 1,
+      );
+      
+      if (success) {
+        Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(), // Ganti dengan halaman sebelumnya
+        ),);
+      } else {
+        print('❌ Gagal update transaksi');
+        Navigator.pop(context, false);
+      }
+    } else{
+      Navigator.pop(context);
+    }    
+  },
+),
                   ],
                 ),
                 const SizedBox(height: 30),
@@ -614,11 +701,13 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                         style: TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                       const SizedBox(height: 8),
+                      // Ganti TextField jumlah yang sudah ada dengan:
                       TextField(
                         controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          CurrencyInputFormatter(formatFunction: formatRupiah), // Gunakan fungsi formatRupiah yang sudah ada
+                        ],
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -640,53 +729,50 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Payment Method Custom Dropdown
-                if (widget.transactionData == null || widget.transactionData!['tipe'] == 'EXPENSE')
-                  CompositedTransformTarget(
-                    link: _paymentLayerLink,
-                    child: _buildDetailCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'METODE PEMBAYARAN',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: _showPaymentOverlay,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _selectedPaymentMethod ?? 'Loading...',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                CompositedTransformTarget(
+                  link: _paymentLayerLink,
+                  child: _buildDetailCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'METODE PEMBAYARAN',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: _showPaymentOverlay,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _selectedPaymentMethod ?? 'Loading...',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
                                 ),
-                                Icon(
-                                  _isPaymentOverlayVisible
-                                      ? Icons.arrow_drop_up
-                                      : Icons.arrow_drop_down,
-                                  color: DarkColors.oren,
-                                ),
-                              ],
-                            ),
+                              ),
+                              Icon(
+                                _isPaymentOverlayVisible
+                                    ? Icons.arrow_drop_up
+                                    : Icons.arrow_drop_down,
+                                color: DarkColors.oren,
+                              ),
+                            ],
                           ),
-                          const Divider(
-                            color: DarkColors.oren,
-                            thickness: 1,
-                            height: 24,
-                          ),
-                        ],
-                      ),
+                        ),
+                        const Divider(
+                          color: DarkColors.oren,
+                          thickness: 1,
+                          height: 24,
+                        ),
+                      ],
                     ),
                   ),
-                if (widget.transactionData == null || widget.transactionData!['tipe'] == 'EXPENSE')
-                  const SizedBox(height: 16),
+                ),
+                const SizedBox(height: 16),
 
                 // Description
                 _buildDetailCard(

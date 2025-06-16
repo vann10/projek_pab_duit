@@ -1,6 +1,21 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
+// CategoryItem class definition
+class CategoryItem {
+  final int id;
+  final String name;
+  final IconData icon;
+  final Color color;
+
+  CategoryItem({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.color,
+  });
+}
+
 class TransactionCard extends StatelessWidget {
   final String merchantName;
   final String date;
@@ -9,8 +24,25 @@ class TransactionCard extends StatelessWidget {
   final String logoAsset;
   final String tipe;
   final Color backgroundColor;
-  final Color accentColor;
   final VoidCallback onTap;
+
+  // Static category lists
+  static final List<CategoryItem> _categoriesExpense = [
+    CategoryItem(id: 1, name: 'Makanan', icon: Icons.fastfood, color: Colors.orange),
+    CategoryItem(id: 2, name: 'Kebutuhan', icon: Icons.shopping_cart, color: Colors.cyan),
+    CategoryItem(id: 3, name: 'Pakaian', icon: Icons.checkroom, color: Colors.purple),
+    CategoryItem(id: 4, name: 'Tabungan', icon: Icons.bar_chart, color: Colors.amber),
+    CategoryItem(id: 5, name: 'Sosial', icon: Icons.people, color: Colors.green),
+    CategoryItem(id: 6, name: 'Transportasi', icon: Icons.directions_bus, color: Colors.red),
+    CategoryItem(id: 7, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+  ];
+
+  static final List<CategoryItem> _categoriesIncome = [
+    CategoryItem(id: 8, name: 'Gaji', icon: Icons.paid, color: Colors.green),
+    CategoryItem(id: 9, name: 'Bonus', icon: Icons.redeem, color: Colors.cyan),
+    CategoryItem(id: 10, name: 'Uang Saku', icon: Icons.payment, color: Colors.orange),
+    CategoryItem(id: 11, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+  ];
 
   const TransactionCard({
     super.key,
@@ -22,8 +54,8 @@ class TransactionCard extends StatelessWidget {
     required this.tipe,
     required this.onTap,
     this.backgroundColor = const Color(0xFF141326),
-    this.accentColor = const Color(0xFFFF6B35),
   });
+
   String formatRupiah(int amount, {String prefix = 'Rp'}) {
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
@@ -33,10 +65,33 @@ class TransactionCard extends StatelessWidget {
     return formatter.format(amount);
   }
 
+  // Method to get accent color based on merchantName and transaction type
+  Color getAccentColor() {
+    List<CategoryItem> categories;
+    
+    // Choose category list based on transaction type
+    if (tipe == 'INCOME') {
+      categories = _categoriesIncome;
+    } else {
+      categories = _categoriesExpense;
+    }
+
+    // Find matching category by name
+    try {
+      final category = categories.firstWhere(
+        (cat) => cat.name.toLowerCase() == merchantName.toLowerCase(),
+      );
+      return category.color;
+    } catch (e) {
+      // Return default color if no match found
+      return const Color(0xFFFF6B35);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final amountColor = tipe == 'INCOME' ? Colors.greenAccent : Colors.red;
+    final accentColor = getAccentColor();
 
     return Material(
       color: Colors.transparent,

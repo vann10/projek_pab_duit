@@ -148,7 +148,6 @@ class DatabaseHelper {
     );
   }
 
-  // Fungsi untuk mendapatkan semua dompet
   Future<List<Map<String, dynamic>>> getAllDompet() async {
     final db = await instance.database;
     return await db.query('dompet');
@@ -211,11 +210,6 @@ class DatabaseHelper {
     return maps.map((map) => Transaksi.fromMap(map)).toList();
   }
 
-  Future close() async {
-    final db = await instance.database;
-    db.close();
-  }
-
   Future<bool> updateTransaksiById({
     required int id,
     required int jumlahBaru,
@@ -243,13 +237,27 @@ class DatabaseHelper {
         final oldData = oldTransaksi.first;
         final int jumlahLama = oldData['jumlah'] as int;
         final String tipeLama = oldData['tipe'] as String;
+        final int dompetLamaId = oldData['dompet_id'] as int;
 
-        // Kembalikan saldo berdasarkan transaksi lama
+        // Kembalikan saldo ke dompet lama
         final int saldoReversal = tipeLama == 'INCOME' ? -jumlahLama : jumlahLama;
         await txn.rawUpdate(
           'UPDATE dompet SET saldo = saldo + ? WHERE id = ?',
-          [saldoReversal, dompetId],
+          [saldoReversal, dompetLamaId],
         );
+
+        // Cek apakah dompet baru ada (jika berbeda dari dompet lama)
+        if (dompetId != dompetLamaId) {
+          final dompetBaru = await txn.query(
+            'dompet',
+            where: 'id = ?',
+            whereArgs: [dompetId],
+            limit: 1,
+          );
+          if (dompetBaru.isEmpty) {
+            throw Exception("Dompet tujuan tidak ditemukan");
+          }
+        }
 
         // Ambil kategori_id baru
         final kategoriResult = await txn.query(
@@ -270,13 +278,13 @@ class DatabaseHelper {
             'deskripsi': deskripsiBaru,
             'tipe': tipe,
             'tanggal': DateTime.now().toIso8601String(),
-            'dompet_id': dompetId,
+            'dompet_id': dompetId, // Dompet bisa berubah
           },
           where: 'id = ?',
           whereArgs: [id],
         );
 
-        // Update saldo dompet dengan transaksi baru
+        // Update saldo dompet baru (bisa sama atau berbeda dari dompet lama)
         final int saldoBaru = tipe == 'INCOME' ? jumlahBaru : -jumlahBaru;
         await txn.rawUpdate(
           'UPDATE dompet SET saldo = saldo + ? WHERE id = ?',
@@ -290,4 +298,10 @@ class DatabaseHelper {
       return false;
     }
   }
+
+  Future close() async {
+    final db = await instance.database;
+    db.close();
+  }
+
 }
