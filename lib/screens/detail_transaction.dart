@@ -11,12 +11,17 @@ class CategoryItem {
   final IconData icon;
   final Color color;
 
-  CategoryItem({required this.id, required this.name, required this.icon, required this.color});
+  CategoryItem({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.color,
+  });
 }
 
 class CurrencyInputFormatter extends TextInputFormatter {
   final String Function(int) formatFunction;
-  
+
   CurrencyInputFormatter({required this.formatFunction});
 
   @override
@@ -39,7 +44,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
 
     // Ambil bagian numerik saja (hapus "Rp" dan karakter non-digit)
     String digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     // Jika tidak ada digit, set ke "0"
     if (digitsOnly.isEmpty) {
       digitsOnly = '0';
@@ -56,7 +61,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
     // Convert ke int dan format menggunakan fungsi yang sudah ada
     int numericValue = int.tryParse(digitsOnly) ?? 0;
     String formattedText = formatFunction(numericValue);
-    
+
     // Set cursor ke akhir text
     return TextEditingValue(
       text: formattedText,
@@ -73,7 +78,7 @@ int getNumericValue(String formattedText) {
 
 class DetailTransactionPage extends StatefulWidget {
   final Map<String, dynamic>? transactionData;
-  
+
   const DetailTransactionPage({super.key, this.transactionData});
 
   @override
@@ -95,19 +100,64 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   final LayerLink _paymentLayerLink = LayerLink();
 
   final List<CategoryItem> _categoriesExpense = [
-    CategoryItem(id: 1, name: 'Makanan', icon: Icons.fastfood, color: Colors.orange),
-    CategoryItem(id: 2, name: 'Kebutuhan', icon: Icons.shopping_cart, color: Colors.cyan),
-    CategoryItem(id: 3, name: 'Pakaian', icon: Icons.checkroom, color: Colors.purple),
-    CategoryItem(id: 4, name: 'Tabungan', icon: Icons.bar_chart, color: Colors.amber),
-    CategoryItem(id: 5, name: 'Sosial', icon: Icons.people, color: Colors.green),
-    CategoryItem(id: 6, name: 'Transportasi', icon: Icons.directions_bus, color: Colors.red),
-    CategoryItem(id: 7, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+    CategoryItem(
+      id: 1,
+      name: 'Makanan',
+      icon: Icons.fastfood,
+      color: Colors.orange,
+    ),
+    CategoryItem(
+      id: 2,
+      name: 'Kebutuhan',
+      icon: Icons.shopping_cart,
+      color: Colors.cyan,
+    ),
+    CategoryItem(
+      id: 3,
+      name: 'Pakaian',
+      icon: Icons.checkroom,
+      color: Colors.purple,
+    ),
+    CategoryItem(
+      id: 4,
+      name: 'Tabungan', 
+      icon: Icons.bar_chart,
+      color: Colors.yellow,
+    ),
+    CategoryItem(
+      id: 5,
+      name: 'Sosial',
+      icon: Icons.people,
+      color: Colors.green,
+    ),
+    CategoryItem(
+      id: 6,
+      name: 'Transportasi',
+      icon: Icons.directions_bus,
+      color: Colors.red,
+    ),
+    CategoryItem(
+      id: 7,
+      name: 'Lainnya',
+      icon: Icons.more_horiz,
+      color: Colors.grey,
+    ),
   ];
   final List<CategoryItem> _categoriesIncome = [
     CategoryItem(id: 8, name: 'Gaji', icon: Icons.paid, color: Colors.green),
     CategoryItem(id: 9, name: 'Bonus', icon: Icons.redeem, color: Colors.cyan),
-    CategoryItem(id: 10, name: 'Uang Saku', icon: Icons.payment, color: Colors.orange),
-    CategoryItem(id: 11, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+    CategoryItem(
+      id: 10,
+      name: 'Uang Saku',
+      icon: Icons.payment,
+      color: Colors.orange,
+    ),
+    CategoryItem(
+      id: 11,
+      name: 'Lainnya',
+      icon: Icons.more_horiz,
+      color: Colors.grey,
+    ),
   ];
   late CategoryItem _selectedCategory;
   late List<CategoryItem> _categories;
@@ -121,13 +171,13 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   Future<void> _loadPaymentMethods() async {
     try {
       // Ganti dengan service database Anda untuk query: SELECT id, nama, saldo FROM dompet
-      final response = await DatabaseHelper.instance.getAllDompet(); 
-      
+      final response = await DatabaseHelper.instance.getAllDompet();
+
       if (response != null && response.isNotEmpty) {
         setState(() {
           _paymentMethods = response;
           _isLoadingPaymentMethods = false;
-          
+
           // Set default payment method
           if (widget.transactionData != null) {
             final dompetNama = widget.transactionData!['dompet_nama'];
@@ -150,6 +200,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
       print('Error loading payment methods: $e');
     }
   }
+
   String formatRupiah(int amount, {String prefix = 'Rp'}) {
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
@@ -163,15 +214,16 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   void initState() {
     super.initState();
     _loadPaymentMethods();
-    
+
     // Initialize with transaction data if available
     if (widget.transactionData != null) {
       final data = widget.transactionData!;
 
-      if(data['tipe'] == 'EXPENSE'){
+      if (data['tipe'] == 'EXPENSE') {
         _categories = _categoriesExpense;
-      } else _categories = _categoriesIncome;
-      
+      } else
+        _categories = _categoriesIncome;
+
       // Parse date
       if (data['tanggal'] != null) {
         try {
@@ -182,30 +234,27 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
       } else {
         _selectedDateTime = DateTime.now();
       }
-      
+
       // Set amount
       final amount = data['jumlah'] ?? 0.0;
-      _amountController = TextEditingController(
-        text: formatRupiah(amount)
-      );
-      
+      _amountController = TextEditingController(text: formatRupiah(amount));
+
       // Set description
       _descriptionController = TextEditingController(
-        text: data['deskripsi'] ?? ''
+        text: data['deskripsi'] ?? '',
       );
-      
+
       // Set category based on kategori_nama or default to first category
       final kategoriNama = data['kategori_nama'];
       _selectedCategory = _categories.firstWhere(
         (item) => item.name.toLowerCase() == kategoriNama?.toLowerCase(),
         orElse: () => _categories.first,
       );
-      
+
       final dompetNama = data['dompet_nama'];
       if (dompetNama != null && _paymentMethods.contains(dompetNama)) {
         _selectedPaymentMethod = dompetNama;
       }
-      
     } else {
       // Default values for new transaction
       _selectedDateTime = DateTime.now();
@@ -420,7 +469,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
     final methodName = method['nama'];
     final methodId = method['id'];
     final saldo = method['saldo'];
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -437,19 +486,17 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
             Text(
               methodName,
               style: TextStyle(
-                color: _selectedPaymentMethod == methodName
-                    ? DarkColors.oren
-                    : Colors.white,
+                color:
+                    _selectedPaymentMethod == methodName
+                        ? DarkColors.oren
+                        : Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               formatRupiah(saldo),
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
           ],
         ),
@@ -532,7 +579,9 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                       },
                     ),
                     Text(
-                      widget.transactionData != null ? 'Detail Transaksi' : 'Tambah Transaksi',
+                      widget.transactionData != null
+                          ? 'Detail Transaksi'
+                          : 'Tambah Transaksi',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -540,42 +589,52 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                       ),
                     ),
                     // Ganti IconButton check yang sudah ada dengan ini:
-IconButton(
-  icon: const Icon(Icons.check, color: Colors.white),
-  onPressed: () async {
-    if (widget.transactionData != null) {
-      
-      String amountText = _amountController.text.replaceAll(RegExp(r'[^\d]'), '');
-      int jumlah = getNumericValue(_amountController.text);
-      
-      // Tentukan tipe transaksi
-      String tipe = _categories == _categoriesIncome ? 'INCOME' : 'EXPENSE';
-      
-      // Panggil updateTransaksiById langsung
-      bool success = await DatabaseHelper.instance.updateTransaksiById(
-        id: widget.transactionData!['id'],
-        jumlahBaru: jumlah,
-        kategoriBaru: _selectedCategory.name,
-        deskripsiBaru: _descriptionController.text.trim(),
-        tipe: tipe,
-        dompetId: _selectedPaymentMethodId ?? 1,
-      );
-      
-      if (success) {
-        Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(), // Ganti dengan halaman sebelumnya
-        ),);
-      } else {
-        print('❌ Gagal update transaksi');
-        Navigator.pop(context, false);
-      }
-    } else{
-      Navigator.pop(context);
-    }    
-  },
-),
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.white),
+                      onPressed: () async {
+                        if (widget.transactionData != null) {
+                          String amountText = _amountController.text.replaceAll(
+                            RegExp(r'[^\d]'),
+                            '',
+                          );
+                          int jumlah = getNumericValue(_amountController.text);
+
+                          // Tentukan tipe transaksi
+                          String tipe =
+                              _categories == _categoriesIncome
+                                  ? 'INCOME'
+                                  : 'EXPENSE';
+
+                          // Panggil updateTransaksiById langsung
+                          bool success = await DatabaseHelper.instance
+                              .updateTransaksiById(
+                                id: widget.transactionData!['id'],
+                                jumlahBaru: jumlah,
+                                kategoriBaru: _selectedCategory.name,
+                                deskripsiBaru:
+                                    _descriptionController.text.trim(),
+                                tipe: tipe,
+                                dompetId: _selectedPaymentMethodId ?? 1,
+                              );
+
+                          if (success) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        HomePage(), // Ganti dengan halaman sebelumnya
+                              ),
+                            );
+                          } else {
+                            print('❌ Gagal update transaksi');
+                            Navigator.pop(context, false);
+                          }
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 30),
@@ -704,9 +763,13 @@ IconButton(
                       // Ganti TextField jumlah yang sudah ada dengan:
                       TextField(
                         controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         inputFormatters: [
-                          CurrencyInputFormatter(formatFunction: formatRupiah), // Gunakan fungsi formatRupiah yang sudah ada
+                          CurrencyInputFormatter(
+                            formatFunction: formatRupiah,
+                          ), // Gunakan fungsi formatRupiah yang sudah ada
                         ],
                         style: const TextStyle(
                           color: Colors.white,

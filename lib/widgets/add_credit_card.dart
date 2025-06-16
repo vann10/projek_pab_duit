@@ -35,7 +35,7 @@ class AddCardFormWidget extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'Add card',
+                'Tambahkan Sumber',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 18,
