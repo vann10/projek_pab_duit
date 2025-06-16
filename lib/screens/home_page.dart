@@ -134,7 +134,7 @@ class _HomeContentState extends State<HomeContent> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: -170,
+            bottom: -185,
             child: Image.asset(
               'assets/images/subtract.png',
               fit: BoxFit.contain,
