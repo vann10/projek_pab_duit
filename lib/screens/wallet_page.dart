@@ -5,8 +5,17 @@ import 'package:projek_pab_duit/widgets/carousel_card.dart';
 import 'package:projek_pab_duit/widgets/credit_card.dart';
 
 
-class WalletScreen extends StatelessWidget {
+class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
+
+  @override
+  State<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends State<WalletScreen> {
+  void _handleDompetAdded() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +40,8 @@ class WalletScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const BalanceWidget(),
               const SizedBox(height: 20),
-              const AddCardFormWidget(),
-              const SizedBox(height: 60)
+              AddCardFormWidget(onDompetAdded: _handleDompetAdded),
+              const SizedBox(height: 60),
             ],
           ),
         ),

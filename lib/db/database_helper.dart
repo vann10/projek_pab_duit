@@ -88,6 +88,14 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> addDompet(String nama, int saldo) async {
+    final db = await instance.database;
+    await db.insert('dompet', {
+          'nama': nama,
+          'saldo': saldo,
+      });
+  }
+
   // Insert transaksi dan update saldo dompet dalam satu transaksi database
   Future<bool> insertTransaksiWithUpdateSaldo({
     required int jumlah,

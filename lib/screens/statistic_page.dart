@@ -301,7 +301,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       // 1. Bungkus body dengan SingleChildScrollView agar bisa di-scroll
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             children: [
               MonthCarouselWidget(
@@ -310,7 +310,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 scrollController: _scrollController,
                 onMonthChanged: _onMonthChanged,
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TotalExpenseWidget(
@@ -327,7 +327,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   onTypeChanged: _onTypeChanged,
                 ),
               ),
-              const SizedBox(height: 35),
+              const SizedBox(height: 10),
               // 2. Widget Expanded di bagian ini harus dihapus
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
