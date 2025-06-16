@@ -88,10 +88,33 @@ class TransactionCard extends StatelessWidget {
     }
   }
 
+  IconData getIcon() {
+    List<CategoryItem> categories;
+    
+    // Choose category list based on transaction type
+    if (tipe == 'INCOME') {
+      categories = _categoriesIncome;
+    } else {
+      categories = _categoriesExpense;
+    }
+
+    // Find matching category by name
+    try {
+      final category = categories.firstWhere(
+        (cat) => cat.name.toLowerCase() == merchantName.toLowerCase(),
+      );
+      return category.icon;
+    } catch (e) {
+      // Return default icon if no match found
+      return Icons.question_mark;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final amountColor = tipe == 'INCOME' ? Colors.greenAccent : Colors.red;
     final accentColor = getAccentColor();
+    final iconData = getIcon();
 
     return Material(
       color: Colors.transparent,
@@ -139,12 +162,13 @@ class TransactionCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: accentColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.asset(logoAsset, fit: BoxFit.contain),
+                      child: Icon(
+                        iconData,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
                     const SizedBox(width: 16),
