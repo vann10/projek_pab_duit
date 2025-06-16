@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
-import 'package:projek_pab_duit/widgets/period_filter_widget.dart';
+import 'package:projek_pab_duit/widgets/carousel_bulan.dart';
 import 'package:projek_pab_duit/widgets/total_expense_widget.dart';
 import 'package:projek_pab_duit/widgets/income_expense_toggle_widget.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-// Enum untuk mengelola state filter periode dan tipe
+// Enum untuk tipe transaksi
 enum StatPeriod { Daily, Monthly, Yearly }
 
 enum StatType { Income, Expense }
@@ -35,11 +36,15 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
-  StatPeriod _selectedPeriod = StatPeriod.Monthly;
   StatType _selectedType = StatType.Expense;
   int _touchedIndex = -1;
 
-  // State untuk data yang sudah diproses, bukan widget
+  // State untuk carousel
+  List<DateTime> _availableMonths = [];
+  DateTime? _selectedMonth;
+  final ScrollController _scrollController = ScrollController();
+
+  // State untuk data yang sudah diproses
   Map<String, double> _categoryTotals = {};
   double _totalAmount = 0.0;
   bool _isLoading = true;
@@ -110,7 +115,35 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeDateFormatting();
+  }
+
+  // Inisialisasi locale untuk DateFormat
+  Future<void> _initializeDateFormatting() async {
+    await initializeDateFormatting('id_ID', null);
+    _initializeAvailableMonths();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Inisialisasi daftar bulan yang tersedia (contoh: 12 bulan terakhir)
+  void _initializeAvailableMonths() {
+    final now = DateTime.now();
+    _availableMonths = [];
+
+    // Buat daftar 12 bulan terakhir
+    for (int i = 11; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      _availableMonths.add(month);
+    }
+
+    // Set bulan saat ini sebagai default
+    _selectedMonth = DateTime(now.year, now.month, 1);
   }
 
   Future<void> _loadData() async {
@@ -147,22 +180,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           return kategoriTipe == typeString;
         }).toList();
 
-    // 2. Filter data berdasarkan periode
-    final now = DateTime.now();
+    // 2. Filter data berdasarkan bulan yang dipilih
     final filteredByDate =
         filteredByType.where((tx) {
           final txDateString = tx['tanggal'];
-          if (txDateString == null) return false;
+          if (txDateString == null || _selectedMonth == null) return false;
           final txDate = DateTime.parse(txDateString);
 
-          switch (_selectedPeriod) {
-            case StatPeriod.Daily:
-              return txDate.isAfter(now.subtract(const Duration(days: 30)));
-            case StatPeriod.Monthly:
-              return txDate.year == now.year && txDate.month == now.month;
-            case StatPeriod.Yearly:
-              return txDate.year == now.year;
-          }
+          return txDate.year == _selectedMonth!.year &&
+              txDate.month == _selectedMonth!.month;
         }).toList();
 
     // 3. Agregasi data: kelompokkan berdasarkan kategori dan hitung totalnya
@@ -249,12 +275,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return formatter.format(amount);
   }
 
-  void _onPeriodChanged(StatPeriod period) {
-    setState(() {
-      _selectedPeriod = period;
-      _touchedIndex = -1;
-    });
-    _loadData();
+  void _onMonthChanged(DateTime month) {
+    if (_selectedMonth?.year != month.year ||
+        _selectedMonth?.month != month.month) {
+      setState(() {
+        _selectedMonth = month;
+        _touchedIndex = -1;
+      });
+      _loadData();
+    }
   }
 
   void _onTypeChanged(StatType type) {
@@ -269,41 +298,53 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DarkColors.bg,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: Column(
-          children: [
-            PeriodFilterWidget(
-              selectedPeriod: _selectedPeriod,
-              onPeriodChanged: _onPeriodChanged,
-            ),
-            const SizedBox(height: 30),
-            TotalExpenseWidget(
-              totalAmount: _formatCurrency(_totalAmount),
-              label:
-                  'Total ${_selectedType == StatType.Expense ? "Expense" : "Income"}',
-            ),
-            const SizedBox(height: 24),
-            IncomeExpenseToggleWidget(
-              selectedType: _selectedType,
-              onTypeChanged: _onTypeChanged,
-            ),
-            const SizedBox(height: 35),
-            Expanded(
-              child:
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _categoryTotals.isEmpty
-                      ? const Center(
-                        child: Text(
-                          'Tidak ada data untuk periode ini.',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                      )
-                      : _buildPieChart(),
-            ),
-            const SizedBox(height: 50),
-          ],
+      // 1. Bungkus body dengan SingleChildScrollView agar bisa di-scroll
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            children: [
+              MonthCarouselWidget(
+                availableMonths: _availableMonths,
+                selectedMonth: _selectedMonth,
+                scrollController: _scrollController,
+                onMonthChanged: _onMonthChanged,
+              ),
+              const SizedBox(height: 30),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TotalExpenseWidget(
+                  totalAmount: _formatCurrency(_totalAmount),
+                  label:
+                      'Total ${_selectedType == StatType.Expense ? "Expense" : "Income"}',
+                ),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: IncomeExpenseToggleWidget(
+                  selectedType: _selectedType,
+                  onTypeChanged: _onTypeChanged,
+                ),
+              ),
+              const SizedBox(height: 35),
+              // 2. Widget Expanded di bagian ini harus dihapus
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _categoryTotals.isEmpty
+                  ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Text(
+                        'Tidak ada data untuk periode ini.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    ),
+                  )
+                  : _buildPieChart(),
+              const SizedBox(height: 50),
+            ],
+          ),
         ),
       ),
     );
