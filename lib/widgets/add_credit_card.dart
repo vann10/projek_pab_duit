@@ -45,77 +45,72 @@ class AddCardFormWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 5),
-          Text(
-            'Add your credit / debit card',
-            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
-          ),
           const SizedBox(height: 20),
           Form(
             child: Column(
               children: [
                 TextFormField(
-                  decoration: inputDecoration.copyWith(hintText: 'Card Number'),
+                  decoration: inputDecoration.copyWith(hintText: 'Nama Sumber'),
                   style: GoogleFonts.poppins(color: Colors.white),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
-                  decoration: inputDecoration.copyWith(
-                    hintText: 'Cardholder Name',
-                  ),
+                  decoration: inputDecoration.copyWith(hintText: 'Saldo'),
                   style: GoogleFonts.poppins(color: Colors.white),
                 ),
                 const SizedBox(height: 15),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        decoration: inputDecoration.copyWith(
-                          hintText: 'Expiry Date (MM/YY)',
-                        ),
-                        style: GoogleFonts.poppins(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: TextFormField(
-                        decoration: inputDecoration.copyWith(
-                          hintText: 'Security Code',
-                        ),
-                        style: GoogleFonts.poppins(color: Colors.white),
-                        keyboardType: TextInputType.number,
-                        obscureText: true,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 25),
-                ElevatedButton(
-                  onPressed: () {
-                    // Logika untuk menambahkan kartu
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    backgroundColor: const Color(0xFF4e54c8),
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: Text(
-                    'Add Card',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                // Row(
+                //   children: [
+                //     Expanded(
+                //       child: TextFormField(
+                //         decoration: inputDecoration.copyWith(
+                //           hintText: 'Expiry Date (MM/YY)',
+                //         ),
+                //         style: GoogleFonts.poppins(color: Colors.white),
+                //       ),
+                //     ),
+                //     const SizedBox(width: 15),
+                //     Expanded(
+                //       child: TextFormField(
+                //         decoration: inputDecoration.copyWith(
+                //           hintText: 'Security Code',
+                //         ),
+                //         style: GoogleFonts.poppins(color: Colors.white),
+                //         keyboardType: TextInputType.number,
+                //         obscureText: true,
+                //       ),
+                //     ),
               ],
+            ),
+          ),
+          const SizedBox(height: 25),
+          ElevatedButton(
+            onPressed: () {
+              // Logika untuk menambahkan kartu
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: const Color(0xFF4e54c8),
+              minimumSize: const Size(double.infinity, 50),
+            ),
+            child: Text(
+              'Add Card',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
       ),
+      //),
+      //],
+      //),
     );
   }
 }

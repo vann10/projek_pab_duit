@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
-import 'package:projek_pab_duit/screens/balance_page.dart';
+import 'package:projek_pab_duit/screens/wallet_page.dart';
 import 'package:projek_pab_duit/screens/detail_transaction.dart';
 import 'package:projek_pab_duit/screens/insight_page.dart';
 import 'package:projek_pab_duit/themes/colors.dart';

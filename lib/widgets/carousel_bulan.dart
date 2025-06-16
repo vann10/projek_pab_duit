@@ -22,7 +22,7 @@ class MonthCarouselWidget extends StatefulWidget {
 
 class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
   late PageController _pageController;
-  int _currentIndex = 0;
+  int _currentIndex = 12; //Ini masih statis Han tolong diubah logicnya hehe
 
   @override
   void initState() {
@@ -30,7 +30,7 @@ class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
     _initializePosition();
     _pageController = PageController(
       initialPage: _currentIndex,
-      viewportFraction: 1.0 / 3.0, // Menampilkan 3 item sekaligus
+      viewportFraction: 1.0 / 3.0,
     );
   }
 
@@ -40,6 +40,7 @@ class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
     super.dispose();
   }
 
+  // Menginisialisasi posisi awal carousel berdasarkan bulan yang dipilih
   void _initializePosition() {
     if (widget.selectedMonth != null && widget.availableMonths.isNotEmpty) {
       final index = widget.availableMonths.indexWhere(
@@ -48,11 +49,12 @@ class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
             month.month == widget.selectedMonth!.month,
       );
       if (index != -1) {
-        _currentIndex = index;
+        _currentIndex = index; //nyambung kesini
       }
     }
   }
 
+  // Dipanggil saat halaman/bulan digeser (swipe)
   void _onPageChanged(int index) {
     setState(() {
       _currentIndex = index;
@@ -60,7 +62,9 @@ class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
     widget.onMonthChanged(widget.availableMonths[index]);
   }
 
+  // Dipanggil saat salah satu bulan di-tap
   void _onMonthTap(int index) {
+    // Animasikan ke halaman yang di-tap jika bukan halaman saat ini
     if (index != _currentIndex) {
       _pageController.animateToPage(
         index,
@@ -70,12 +74,11 @@ class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
     }
   }
 
-  // Fungsi untuk format bulan dengan fallback jika locale belum diinisialisasi
+  // Fungsi untuk format bulan dengan fallback
   String _formatMonth(DateTime month) {
     try {
       return DateFormat('MMM yyyy', 'id_ID').format(month);
     } catch (e) {
-      // Fallback ke format manual jika locale belum diinisialisasi
       const monthNames = [
         'Jan',
         'Feb',
@@ -100,74 +103,68 @@ class _MonthCarouselWidgetState extends State<MonthCarouselWidget> {
       return const SizedBox(height: 50);
     }
 
-    return SizedBox(
+    // Menghitung lebar area untuk satu item bulan
+    // Lebar layar dikurangi margin horizontal (24 * 2), lalu dibagi 3
+    final double itemWidth = (MediaQuery.of(context).size.width - 48) / 3;
+
+    // Container utama yang berfungsi sebagai card latar belakang
+    return Container(
       height: 50,
-      child: PageView.builder(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        itemCount: widget.availableMonths.length,
-        itemBuilder: (context, index) {
-          final month = widget.availableMonths[index];
-          final monthString = _formatMonth(month);
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 34, 34, 77),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: itemWidth,
+            height: 40,
+            decoration: BoxDecoration(
+              color: DarkColors.bg1.withAlpha(100),
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
 
-          // Menentukan status berdasarkan posisi relatif terhadap index saat ini
-          final isSelected = index == _currentIndex;
-          final isAdjacent =
-              (index == _currentIndex - 1) || (index == _currentIndex + 1);
+          // PageView untuk bulan (di lapisan depan)
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            itemCount: widget.availableMonths.length,
+            itemBuilder: (context, index) {
+              final month = widget.availableMonths[index];
+              final monthString = _formatMonth(month);
 
-          return GestureDetector(
-            onTap: () => _onMonthTap(index),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  color:
-                      isSelected
-                          ? const Color(0xFF4A90E2) // Biru untuk yang dipilih
-                          : Colors
-                              .transparent, // Transparan untuk yang tidak dipilih
-                  borderRadius: BorderRadius.circular(25),
-                  border:
-                      !isSelected
-                          ? Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1,
-                          )
-                          : null,
-                  boxShadow:
-                      isSelected
-                          ? [
-                            BoxShadow(
-                              color: const Color(0xFF4A90E2).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                          : [],
-                ),
-                child: Center(
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 300),
-                    style: TextStyle(
-                      color:
-                          isSelected
-                              ? Colors
-                                  .white // Putih untuk yang dipilih
-                              : Colors.white.withOpacity(
-                                0.5,
-                              ), // Abu-abu untuk yang tidak dipilih
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 14,
+              // Menentukan apakah item ini adalah item yang sedang di tengah
+              final isSelected = index == _currentIndex;
+
+              return GestureDetector(
+                onTap: () => _onMonthTap(index),
+                // Container transparan untuk memastikan area tap berfungsi
+                child: Container(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 300),
+                      style: TextStyle(
+                        // Bulan yang di tengah berwarna putih dan tebal
+                        color:
+                            isSelected
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.5),
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 14,
+                      ),
+                      child: Text(monthString),
                     ),
-                    child: Text(monthString),
                   ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
