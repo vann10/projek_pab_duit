@@ -4,56 +4,57 @@ import 'package:intl/intl.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
 
 class CreditCardModel {
-  final String cardHolderName;
+  final String cardName;
   final String cardNumber;
   final String expiryDate;
   final String logoAsset;
   final Gradient gradient;
+  final int saldo;
 
   CreditCardModel({
-    required this.cardHolderName,
+    required this.cardName,
     required this.cardNumber,
     required this.expiryDate,
     required this.logoAsset,
     required this.gradient,
+    required this.saldo,
   });
-}
 
-final List<CreditCardModel> cardData = [
-  CreditCardModel(
-    cardHolderName: "Jokowi Pekok",
-    cardNumber: "1234 5678 9012 3456",
-    expiryDate: "09/24",
-    logoAsset: "assets/images/mastercard.png",
-    gradient: const LinearGradient(
-      colors: [Color(0xFFFFD700), Color(0xFFE48F23), Color(0xFFC0392B)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    ),
-  ),
-  CreditCardModel(
-    cardHolderName: "Prabowo Pekok",
-    cardNumber: "9876 5432 1098 7654",
-    expiryDate: "11/25",
-    logoAsset: "assets/images/mastercard.png",
-    gradient: const LinearGradient(
-      colors: [Color(0xFF4e54c8), Color(0xFF8f94fb)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    ),
-  ),
-  CreditCardModel(
-    cardHolderName: "Gibran Pekok",
-    cardNumber: "5555 6666 7777 8888",
-    expiryDate: "01/26",
-    logoAsset: "assets/images/mastercard.png",
-    gradient: const LinearGradient(
-      colors: [Color(0xFF00c6ff), Color(0xFF0072ff)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    ),
-  ),
-];
+  factory CreditCardModel.fromMap(Map<String, dynamic> map, int index) {
+    // Generate card number based on index or id
+    String cardNumber = "1234 5678 9012 ${(3456 + index).toString().padLeft(4, '0')}";
+    
+    // Generate expiry date (current year + 2-4 years)
+    DateTime now = DateTime.now();
+    DateTime expiry = DateTime(now.year + 2 + (index % 3), now.month);
+    String expiryDate = "${expiry.month.toString().padLeft(2, '0')}/${expiry.year.toString().substring(2)}";
+    
+    // Gradient colors array
+    List<List<Color>> gradients = [
+      [const Color(0xFFFFD700), const Color(0xFFE48F23), const Color(0xFFC0392B)],
+      [const Color(0xFF4e54c8), const Color(0xFF8f94fb)],
+      [const Color(0xFF00c6ff), const Color(0xFF0072ff)],
+      [const Color(0xFFf093fb), const Color(0xFFf5576c)],
+      [const Color(0xFF4facfe), const Color(0xFF00f2fe)],
+      [const Color(0xFF43e97b), const Color(0xFF38f9d7)],
+      [const Color(0xFFfa709a), const Color(0xFFfee140)],
+      [const Color(0xFFa8edea), const Color(0xFFfed6e3)],
+    ];
+    
+    return CreditCardModel(
+      cardName: map['nama'] ?? 'Card ${index + 1}',
+      cardNumber: cardNumber,
+      expiryDate: expiryDate,
+      logoAsset: "assets/images/mastercard.png",
+      gradient: LinearGradient(
+        colors: gradients[index % gradients.length],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      saldo: map['saldo'] ?? 0,
+    );
+  }
+}
 
 class CreditCardWidget extends StatelessWidget {
   final CreditCardModel card;
@@ -61,6 +62,12 @@ class CreditCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedSaldo = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp',
+      decimalDigits: 0,
+    ).format(card.saldo);
+
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -90,6 +97,16 @@ class CreditCardWidget extends StatelessWidget {
                   letterSpacing: 2,
                 ),
               ),
+              const SizedBox(height: 10),
+              // Balance display
+              Text(
+                formattedSaldo,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -98,14 +115,14 @@ class CreditCardWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Card Holder',
+                        'Card Name',
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 10,
                         ),
                       ),
                       Text(
-                        card.cardHolderName,
+                        card.cardName,
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 14,
@@ -145,14 +162,61 @@ class CreditCardWidget extends StatelessWidget {
   }
 }
 
+class DynamicCreditCardList extends StatelessWidget {
+  const DynamicCreditCardList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: DatabaseHelper.instance.getAllDompet(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
+          );
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Text(
+              'No cards available',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+          );
+        } else {
+          final dompetList = snapshot.data!;
+          return SizedBox(
+            height: 220,
+            child: PageView.builder(
+              itemCount: dompetList.length,
+              controller: PageController(viewportFraction: 0.85),
+              itemBuilder: (context, index) {
+                final card = CreditCardModel.fromMap(dompetList[index], index);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: CreditCardWidget(card: card),
+                );
+              },
+            ),
+          );
+        }
+      },
+    );
+  }
+}
+
+// Updated BalanceWidget to show total from all cards
 class BalanceWidget extends StatelessWidget {
   const BalanceWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: FutureBuilder<int>(
-        future: DatabaseHelper.instance.getTotalSaldo(),
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: DatabaseHelper.instance.getAllDompet(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CircularProgressIndicator();
@@ -162,13 +226,17 @@ class BalanceWidget extends StatelessWidget {
               style: GoogleFonts.poppins(color: Colors.red),
             );
           } else {
-            final total = snapshot.data ?? 0;
+            final dompetList = snapshot.data ?? [];
+            final totalSaldo = dompetList.fold<int>(
+              0, 
+              (sum, dompet) => sum + (dompet['saldo'] as int? ?? 0),
+            );
 
             final formattedSaldo = NumberFormat.currency(
               locale: 'id_ID',
               symbol: 'Rp',
               decimalDigits: 0,
-            ).format(total);
+            ).format(totalSaldo);
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -182,7 +250,7 @@ class BalanceWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Available Balance',
+                  'Total Available Balance',
                   style: GoogleFonts.poppins(
                     color: Colors.white70,
                     fontSize: 14,
@@ -192,6 +260,34 @@ class BalanceWidget extends StatelessWidget {
             );
           }
         },
+      ),
+    );
+  }
+}
+
+// Example usage widget
+class CreditCardPage extends StatelessWidget {
+  const CreditCardPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: Text(
+          'My Cards',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: const Column(
+        children: [
+          SizedBox(height: 20),
+          BalanceWidget(),
+          SizedBox(height: 30),
+          DynamicCreditCardList(),
+        ],
       ),
     );
   }
