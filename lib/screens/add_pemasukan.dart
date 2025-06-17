@@ -15,40 +15,50 @@ class AddPemasukanPage extends StatefulWidget {
 class _AddPemasukanPageState extends State<AddPemasukanPage> {
   String _amount = '';
   bool _isExpense = true;
-  bool _showDropdown = false;
   String _description = '-';
-  String _category = 'Makanan';
   bool _isFlushbarShowing = false;
   bool _isSubmitting = false;
 
-  // Add TextEditingController for description
+  // Controller untuk deskripsi
   late TextEditingController _descriptionController;
 
-  List<String> _dropdownItems = [];
-  String? _selectedItem;
+  // --- State untuk Kategori ---
+  List<String> _kategoriItems = [];
+  String? _selectedKategori;
+  bool _showKategoriDropdown = false;
 
-  Future<void> _loadDropdownItems() async {
+  // --- State BARU untuk Dompet ---
+  List<Map<String, dynamic>> _dompetList = [];
+  String? _selectedDompetName;
+  int? _selectedDompetId;
+  bool _showDompetDropdown = false;
+
+  // Mengambil data kategori berdasarkan tipe (INCOME/EXPENSE)
+  Future<void> _loadKategoriItems() async {
     List<String> items = [];
-
-    if (_isExpense) {
-      // Ambil kategori bertipe EXPENSE atau BOTH
-      final kategoriList = await DatabaseHelper.instance.getKategoriByTipe("EXPENSE");
-      items = kategoriList.map((row) => row['nama'] as String).toList();
-    } else {
-      // Ambil semua dompet
-      final dompetList = await DatabaseHelper.instance.getKategoriByTipe("INCOME");
-      items = dompetList.map((row) => row['nama'] as String).toList();
-    }
+    final tipe = _isExpense ? "EXPENSE" : "INCOME";
+    final kategoriList = await DatabaseHelper.instance.getKategoriByTipe(tipe);
+    items = kategoriList.map((row) => row['nama'] as String).toList();
 
     setState(() {
-      _dropdownItems = items;
-      // Set item pertama sebagai selected item dan update category
+      _kategoriItems = items;
       if (items.isNotEmpty) {
-        _selectedItem = items.first;
-        _category = items.first;
+        _selectedKategori = items.first;
       } else {
-        _selectedItem = null;
-        _category = _isExpense ? 'Makanan' : 'Dompet Utama';
+        _selectedKategori = null;
+      }
+    });
+  }
+
+  // --- Fungsi BARU untuk mengambil data Dompet ---
+  Future<void> _fetchDompet() async {
+    final dompetData = await DatabaseHelper.instance.getAllDompet();
+    setState(() {
+      _dompetList = dompetData;
+      // Atur dompet pertama sebagai default jika ada
+      if (_dompetList.isNotEmpty) {
+        _selectedDompetId = _dompetList.first['id'];
+        _selectedDompetName = _dompetList.first['nama'];
       }
     });
   }
@@ -57,7 +67,8 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
   void initState() {
     super.initState();
     _descriptionController = TextEditingController();
-    _loadDropdownItems();
+    _loadKategoriItems(); // Memuat kategori
+    _fetchDompet(); // Memuat dompet
   }
 
   @override
@@ -69,7 +80,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
   void _onNumberPress(String value) {
     final raw = _amount.replaceAll(',', '');
 
-    // Validasi maksimal 13 digit
     if (raw.length >= 13) {
       _showMessage("Maksimal input adalah 13 digit", isError: true);
       return;
@@ -94,14 +104,12 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
     });
   }
 
-  // Perbaiki fungsi format currency
   String _formatCurrency(int value) {
     if (value == 0) return '';
     final formatter = NumberFormat('#,###');
     return formatter.format(value);
   }
 
-  // Helper untuk mendapatkan raw value
   int _getRawAmount() {
     final raw = _amount.replaceAll(',', '');
     return int.tryParse(raw) ?? 0;
@@ -123,7 +131,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
 
   void _showMessage(String message, {bool isError = false}) {
     if (_isFlushbarShowing) return;
-
     _isFlushbarShowing = true;
 
     Flushbar(
@@ -147,15 +154,23 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
   }
 
   Future<void> _submitForm() async {
-    // Mencegah double submit
     if (_isSubmitting) return;
 
     final jumlah = _getRawAmount();
     final description = _descriptionController.text.trim();
 
-    // Validasi input
     if (jumlah <= 0) {
       _showMessage("Masukkan jumlah yang valid", isError: true);
+      return;
+    }
+
+    // --- VALIDASI KATEGORI DAN DOMPET ---
+    if (_selectedKategori == null) {
+      _showMessage("Pilih kategori terlebih dahulu", isError: true);
+      return;
+    }
+    if (_selectedDompetId == null) {
+      _showMessage("Pilih dompet terlebih dahulu", isError: true);
       return;
     }
 
@@ -164,29 +179,29 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
     });
 
     try {
-      // Simpan ke database
-      final success = await DatabaseHelper.instance.insertTransaksiWithUpdateSaldo(
-        jumlah: jumlah,
-        kategori: _category,
-        deskripsi: _description,
-        tipe: _isExpense ? 'EXPENSE' : 'INCOME',
-        dompetId: 1,
-      );
+      // --- MODIFIKASI: Kirim `dompetId` yang dipilih ---
+      final success = await DatabaseHelper.instance
+          .insertTransaksiWithUpdateSaldo(
+            jumlah: jumlah,
+            kategori: _selectedKategori!,
+            deskripsi:
+                description.isEmpty
+                    ? '-'
+                    : description, // default value jika kosong
+            tipe: _isExpense ? 'EXPENSE' : 'INCOME',
+            dompetId: _selectedDompetId!, // Menggunakan ID dompet yang dipilih
+          );
 
       if (success) {
         _showMessage(
           "${_isExpense ? 'Pengeluaran' : 'Pemasukan'} berhasil disimpan!",
         );
-
-        // Tunggu sebentar agar user bisa melihat pesan sukses
         await Future.delayed(const Duration(milliseconds: 1000));
-
-        // Kembali ke halaman sebelumnya dengan result
         if (mounted) {
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/home',
-            (Route<dynamic> route) => false, // Hapus semua route sebelumnya
+            (Route<dynamic> route) => false,
           );
         }
       } else {
@@ -203,37 +218,84 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
     }
   }
 
-  // Fungsi untuk validasi input keyboard
   void _onDescriptionChanged(String value) {
     setState(() {
       _description = value;
     });
   }
 
+  // --- Widget BARU untuk Pemilih Dompet ---
+  Widget _buildDompetSelector() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showDompetDropdown = !_showDompetDropdown;
+          _showKategoriDropdown = false; // Tutup dropdown lain
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: DarkColors.oren),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.account_balance_wallet, color: DarkColors.oren),
+                const SizedBox(width: 12),
+                Text(
+                  _selectedDompetName ?? "Pilih Dompet",
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ],
+            ),
+            Icon(
+              _showDompetDropdown ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+              color: Colors.white,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final safeAreaHeight =
+        MediaQuery.of(context).padding.top +
+        MediaQuery.of(context).padding.bottom;
+    final availableHeight = screenHeight - safeAreaHeight;
+
+    // Hitung tinggi numpad (320px untuk 4 baris numpad + padding)
+    const numpadHeight = 320.0;
 
     return Scaffold(
       backgroundColor: DarkColors.bg,
       resizeToAvoidBottomInset: false,
-      // Add floating action button that's always visible
-      floatingActionButton: isKeyboardVisible
-          ? FloatingActionButton(
-              onPressed: _isSubmitting ? null : _submitForm,
-              backgroundColor: _isSubmitting ? Colors.grey : DarkColors.oren,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(Icons.check, color: Colors.white),
-            )
-          : null,
+      floatingActionButton:
+          isKeyboardVisible
+              ? FloatingActionButton(
+                onPressed: _isSubmitting ? null : _submitForm,
+                backgroundColor: _isSubmitting ? Colors.grey : DarkColors.oren,
+                child:
+                    _isSubmitting
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Icon(Icons.check, color: Colors.white),
+              )
+              : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -243,7 +305,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -262,8 +323,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                           ],
                         ),
                       ),
-
-                      // Income / Expense toggle
                       Container(
                         margin: const EdgeInsets.only(
                           top: 8,
@@ -280,16 +339,19 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                             Expanded(
                               child: GestureDetector(
                                 onTap: () async {
+                                  if (!_isExpense) return;
                                   setState(() => _isExpense = false);
-                                  // Muat ulang dropdown ketika toggle berubah
-                                  await _loadDropdownItems();
+                                  await _loadKategoriItems();
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: !_isExpense ? Colors.green : Colors.transparent,
+                                    color:
+                                        !_isExpense
+                                            ? Colors.green
+                                            : Colors.transparent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   alignment: Alignment.center,
@@ -303,16 +365,19 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                             Expanded(
                               child: GestureDetector(
                                 onTap: () async {
+                                  if (_isExpense) return;
                                   setState(() => _isExpense = true);
-                                  // Muat ulang dropdown ketika toggle berubah
-                                  await _loadDropdownItems();
+                                  await _loadKategoriItems();
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _isExpense ? Colors.red : Colors.transparent,
+                                    color:
+                                        _isExpense
+                                            ? Colors.red
+                                            : Colors.transparent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   alignment: Alignment.center,
@@ -326,12 +391,11 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                           ],
                         ),
                       ),
-
-                      // Category Dropdown Button
                       GestureDetector(
                         onTap: () {
                           setState(() {
-                            _showDropdown = !_showDropdown;
+                            _showKategoriDropdown = !_showKategoriDropdown;
+                            _showDompetDropdown = false; // Tutup dropdown lain
                           });
                         },
                         child: Container(
@@ -354,7 +418,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    _category,
+                                    _selectedKategori ?? 'Pilih Kategori',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -366,7 +430,9 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Icon(
-                                  _showDropdown ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                                  _showKategoriDropdown
+                                      ? Icons.arrow_drop_up
+                                      : Icons.arrow_drop_down,
                                   color: Colors.white,
                                   size: 20,
                                 ),
@@ -377,27 +443,24 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                       ),
 
                       const SizedBox(height: 24),
-
                       Center(
                         child: Text(
                           "${_isExpense ? '-' : '+'} Rp${_amount.isEmpty ? '0' : _amount}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
 
-                      // Description Input
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: TextField(
                           controller: _descriptionController,
                           style: const TextStyle(color: Colors.white),
-                          maxLength: 100, // Batasi panjang deskripsi
+                          maxLength: 100,
                           decoration: const InputDecoration(
                             hintText: "Add Description",
                             hintStyle: TextStyle(color: Colors.white70),
@@ -412,13 +475,15 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                           onChanged: _onDescriptionChanged,
                         ),
                       ),
-
                       const SizedBox(height: 20),
+
+                      // --- Widget Pemilih Dompet DITEMPATKAN DI SINI ---
+                      _buildDompetSelector(),
                     ],
                   ),
 
-                  // Dropdown overlay
-                  if (_showDropdown)
+                  // Dropdown overlay untuk Kategori
+                  if (_showKategoriDropdown)
                     Positioned(
                       top: 140,
                       left: 120,
@@ -445,48 +510,171 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                           child: SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: _dropdownItems
-                                  .map(
-                                    (item) => InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedItem = item;
-                                          _category = item;
-                                          _showDropdown = false;
-                                        });
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: _dropdownItems.length > 5 ? 10 : 12, 
-                                          horizontal: 16,
-                                        ),
-                                        constraints: const BoxConstraints(
-                                          minHeight: 40,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _selectedItem == item
-                                              ? Colors.white.withOpacity(0.2)
-                                              : Colors.transparent,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            item,
-                                            style: TextStyle(
-                                              color: _selectedItem == item ? Colors.white : Colors.white70,
-                                              fontWeight: _selectedItem == item
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                              fontSize: _dropdownItems.length > 7 ? 14 : 16,
+                              children:
+                                  _kategoriItems
+                                      .map(
+                                        (item) => InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              _selectedKategori = item;
+                                              _showKategoriDropdown = false;
+                                            });
+                                          },
+                                          child: Container(
+                                            width: double.infinity,
+                                            padding: EdgeInsets.symmetric(
+                                              vertical:
+                                                  _kategoriItems.length > 5
+                                                      ? 10
+                                                      : 12,
+                                              horizontal: 16,
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            constraints: const BoxConstraints(
+                                              minHeight: 40,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  _selectedKategori == item
+                                                      ? Colors.white
+                                                          .withOpacity(0.2)
+                                                      : Colors.transparent,
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                item,
+                                                style: TextStyle(
+                                                  color:
+                                                      _selectedKategori == item
+                                                          ? Colors.white
+                                                          : Colors.white70,
+                                                  fontWeight:
+                                                      _selectedKategori == item
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                  fontSize:
+                                                      _kategoriItems.length > 7
+                                                          ? 14
+                                                          : 16,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
+                                      )
+                                      .toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // --- DROPDOWN OVERLAY DOMPET YANG DIPERBAIKI ---
+                  if (_showDompetDropdown)
+                    Positioned(
+                      top: 415, // Posisi tetap di bawah selector dompet
+                      left: 16,
+                      right: 16,
+                      child: Material(
+                        elevation: 8, // Memberikan elevasi tinggi
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.transparent,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 43, 44, 61),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: DarkColors.oren),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.7),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight:
+                                  MediaQuery.of(context).size.height * 0.25,
+                            ),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children:
+                                    _dompetList.map((dompet) {
+                                      final itemNama = dompet['nama'] as String;
+                                      final itemId = dompet['id'] as int;
+                                      return InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedDompetId = itemId;
+                                            _selectedDompetName = itemNama;
+                                            _showDompetDropdown = false;
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 14,
+                                            horizontal: 16,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                _selectedDompetId == itemId
+                                                    ? DarkColors.oren
+                                                        .withOpacity(0.3)
+                                                    : Colors.transparent,
+                                            border: Border(
+                                              bottom: BorderSide(
+                                                color: Colors.white.withOpacity(
+                                                  0.1,
+                                                ),
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.account_balance_wallet,
+                                                color:
+                                                    _selectedDompetId == itemId
+                                                        ? DarkColors.oren
+                                                        : Colors.white70,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  itemNama,
+                                                  style: TextStyle(
+                                                    color:
+                                                        _selectedDompetId ==
+                                                                itemId
+                                                            ? DarkColors.oren
+                                                            : Colors.white,
+                                                    fontWeight:
+                                                        _selectedDompetId ==
+                                                                itemId
+                                                            ? FontWeight.bold
+                                                            : FontWeight.normal,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (_selectedDompetId == itemId)
+                                                Icon(
+                                                  Icons.check,
+                                                  color: DarkColors.oren,
+                                                  size: 20,
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
                             ),
                           ),
                         ),
@@ -495,8 +683,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                 ],
               ),
             ),
-
-            // Numpad (only show when keyboard is not visible)
             if (!isKeyboardVisible)
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
@@ -504,7 +690,7 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                   children: [
                     for (var i = 0; i < 3; i++)
                       SizedBox(
-                        height: 80,
+                        height: _showDompetDropdown ? 0 : 80,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 30),
                           child: Row(
@@ -524,7 +710,6 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Backspace
                           TextButton(
                             onPressed: _onBackspace,
                             style: TextButton.styleFrom(
@@ -537,34 +722,31 @@ class _AddPemasukanPageState extends State<AddPemasukanPage> {
                               size: 24,
                             ),
                           ),
-
-                          // 0
                           numButton('0', onPressed: () => _onNumberPress('0')),
-
-                          // OK
                           TextButton(
                             onPressed: _isSubmitting ? null : _submitForm,
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.all(16),
                               minimumSize: const Size(60, 60),
                             ),
-                            child: _isSubmitting
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
+                            child:
+                                _isSubmitting
+                                    ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : const Text(
+                                      'OK',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  )
-                                : const Text(
-                                    'OK',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
                           ),
                         ],
                       ),

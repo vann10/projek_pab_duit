@@ -178,6 +178,47 @@ class DatabaseHelper {
     return await db.query('dompet');
   }
 
+  // MODIFIKASI FUNGSI addTransaksi
+  Future<int> addTransaksi({
+    required int jumlah,
+    required String tipe,
+    required String tanggal,
+    required String deskripsi,
+    required int kategoriId,
+    required int dompetId, // Tambahkan parameter ini
+  }) async {
+    final db = await instance.database;
+    int result = 0;
+
+    try {
+      await db.transaction((txn) async {
+        // 1. Update saldo di tabel dompet
+        String updateQuery =
+            tipe == 'INCOME'
+                ? 'UPDATE dompet SET saldo = saldo + ? WHERE id = ?'
+                : 'UPDATE dompet SET saldo = saldo - ? WHERE id = ?';
+
+        await txn.rawUpdate(updateQuery, [jumlah, dompetId]);
+
+        // 2. Insert data ke tabel transaksi
+        result = await txn.insert('transaksi', {
+          'jumlah': jumlah,
+          'tipe': tipe,
+          'tanggal': tanggal,
+          'deskripsi': deskripsi,
+          'kategori_id': kategoriId,
+          'dompet_id': dompetId, // Simpan ID dompet
+        });
+      });
+    } catch (e) {
+      print("Error saat menambah transaksi dan update saldo: $e");
+      // throw exception atau return nilai error jika diperlukan
+      return -1; // Mengindikasikan error
+    }
+
+    return result;
+  }
+
   // Fungsi untuk mendapatkan saldo dompet tertentu
   Future<int> getSaldoDompet(int dompetId) async {
     final db = await instance.database;
