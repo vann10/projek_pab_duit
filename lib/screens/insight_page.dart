@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:projek_pab_duit/screens/coming_soon.dart';
 import 'package:projek_pab_duit/screens/saving_plan_page.dart';
 import 'package:projek_pab_duit/screens/statistic_page.dart';
 import 'package:projek_pab_duit/themes/colors.dart';
@@ -46,9 +47,7 @@ class InsightPage extends StatelessWidget {
             tabs: const [Tab(text: 'Statistics'), Tab(text: 'Savings plan')],
           ),
         ),
-        body: const TabBarView(
-          children: [StatisticsScreen(), SavingsPlanView()],
-        ),
+        body: const TabBarView(children: [StatisticsScreen(), ComingSoon()]),
       ),
     );
   }

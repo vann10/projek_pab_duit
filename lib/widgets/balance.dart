@@ -38,7 +38,7 @@ Widget balance() {
                 ),
               ),
               const SizedBox(height: 50),
-              Image.asset('assets/images/percentage.png', width: 360),
+              //Image.asset('assets/images/percentage.png', width: 360),
             ],
           ),
         );

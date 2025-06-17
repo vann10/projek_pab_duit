@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:projek_pab_duit/themes/colors.dart';
 
 // CategoryItem class definition
 class CategoryItem {
@@ -28,20 +29,65 @@ class TransactionCard extends StatelessWidget {
 
   // Static category lists
   static final List<CategoryItem> _categoriesExpense = [
-    CategoryItem(id: 1, name: 'Makanan', icon: Icons.fastfood, color: Colors.orange),
-    CategoryItem(id: 2, name: 'Kebutuhan', icon: Icons.shopping_cart, color: Colors.cyan),
-    CategoryItem(id: 3, name: 'Pakaian', icon: Icons.checkroom, color: Colors.purple),
-    CategoryItem(id: 4, name: 'Tabungan', icon: Icons.bar_chart, color: Colors.amber),
-    CategoryItem(id: 5, name: 'Sosial', icon: Icons.people, color: Colors.green),
-    CategoryItem(id: 6, name: 'Transportasi', icon: Icons.directions_bus, color: Colors.red),
-    CategoryItem(id: 7, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+    CategoryItem(
+      id: 1,
+      name: 'Makanan',
+      icon: Icons.fastfood,
+      color: Colors.orange,
+    ),
+    CategoryItem(
+      id: 2,
+      name: 'Kebutuhan',
+      icon: Icons.shopping_cart,
+      color: Colors.cyan,
+    ),
+    CategoryItem(
+      id: 3,
+      name: 'Pakaian',
+      icon: Icons.checkroom,
+      color: Colors.purple,
+    ),
+    CategoryItem(
+      id: 4,
+      name: 'Tabungan',
+      icon: Icons.bar_chart,
+      color: Colors.amber,
+    ),
+    CategoryItem(
+      id: 5,
+      name: 'Sosial',
+      icon: Icons.people,
+      color: Colors.green,
+    ),
+    CategoryItem(
+      id: 6,
+      name: 'Transportasi',
+      icon: Icons.directions_bus,
+      color: Colors.red,
+    ),
+    CategoryItem(
+      id: 7,
+      name: 'Lainnya',
+      icon: Icons.more_horiz,
+      color: Colors.grey,
+    ),
   ];
 
   static final List<CategoryItem> _categoriesIncome = [
     CategoryItem(id: 8, name: 'Gaji', icon: Icons.paid, color: Colors.green),
     CategoryItem(id: 9, name: 'Bonus', icon: Icons.redeem, color: Colors.cyan),
-    CategoryItem(id: 10, name: 'Uang Saku', icon: Icons.payment, color: Colors.orange),
-    CategoryItem(id: 11, name: 'Lainnya', icon: Icons.more_horiz, color: Colors.grey),
+    CategoryItem(
+      id: 10,
+      name: 'Uang Saku',
+      icon: Icons.payment,
+      color: Colors.orange,
+    ),
+    CategoryItem(
+      id: 11,
+      name: 'Lainnya',
+      icon: Icons.more_horiz,
+      color: Colors.grey,
+    ),
   ];
 
   const TransactionCard({
@@ -53,7 +99,7 @@ class TransactionCard extends StatelessWidget {
     required this.logoAsset,
     required this.tipe,
     required this.onTap,
-    this.backgroundColor = const Color(0xFF141326),
+    this.backgroundColor = const Color.fromARGB(255, 29, 28, 55),
   });
 
   String formatRupiah(int amount, {String prefix = 'Rp'}) {
@@ -65,10 +111,9 @@ class TransactionCard extends StatelessWidget {
     return formatter.format(amount);
   }
 
-  // Method to get accent color based on merchantName and transaction type
   Color getAccentColor() {
     List<CategoryItem> categories;
-    
+
     // Choose category list based on transaction type
     if (tipe == 'INCOME') {
       categories = _categoriesIncome;
@@ -90,7 +135,7 @@ class TransactionCard extends StatelessWidget {
 
   IconData getIcon() {
     List<CategoryItem> categories;
-    
+
     // Choose category list based on transaction type
     if (tipe == 'INCOME') {
       categories = _categoriesIncome;
@@ -165,11 +210,7 @@ class TransactionCard extends StatelessWidget {
                         color: accentColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        iconData,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                      child: Icon(iconData, color: Colors.white, size: 24),
                     ),
                     const SizedBox(width: 16),
                     Expanded(

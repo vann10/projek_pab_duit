@@ -132,17 +132,6 @@ class _HomeContentState extends State<HomeContent> {
               ),
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: -160,
-            child: Image.asset(
-              'assets/images/subtract.png',
-              fit: BoxFit.contain,
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-            ),
-          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
