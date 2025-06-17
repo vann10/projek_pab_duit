@@ -46,7 +46,6 @@ class Transaksi {
   }
 }
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -109,9 +108,11 @@ class _HomeContentState extends State<HomeContent> {
 
   Future<void> fetchTransaksi() async {
     final data = await DatabaseHelper.instance.getAllTransaksiList();
-    setState(() {
-      transaksiList = data;
-    });
+    if (mounted) {
+      setState(() {
+        transaksiList = data;
+      });
+    }
   }
 
   @override
@@ -172,33 +173,96 @@ class _HomeContentState extends State<HomeContent> {
                         DateTime.tryParse(tx.tanggal) != null
                             ? '${DateTime.parse(tx.tanggal).day}/${DateTime.parse(tx.tanggal).month}/${DateTime.parse(tx.tanggal).year}'
                             : tx.tanggal;
-                    return TransactionCard(
-                      merchantName: tx.kategoriNama ?? '',
-                      date: formattedDate,
-                      deskripsi: tx.deskripsi,
-                      amount: tx.jumlah,
-                      logoAsset: 'assets/images/shell_logo.png',
-                      tipe: tx.tipe,
-                      onTap: () {
-                        // Pass transaction data to detail page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DetailTransactionPage(
-                              transactionData: {
-                                'id': tx.id,
-                                'tanggal': tx.tanggal,
-                                'jumlah': tx.jumlah,
-                                'deskripsi': tx.deskripsi,
-                                'tipe': tx.tipe,
-                                'kategori_nama': tx.kategoriNama,
-                                'kategori_tipe': tx.kategoriTipe,
-                                'dompet_nama': tx.dompetNama,
-                              },
-                            ),
+                    return Dismissible(
+                      key: Key(tx.id.toString()),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        alignment: Alignment.centerRight,
+                        child: const Icon(Icons.delete, color: Colors.red),
+                      ),
+                      confirmDismiss: (direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              backgroundColor: const Color(0xFF2E2D4A),
+                              title: const Text(
+                                "Konfirmasi Hapus",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              content: const Text(
+                                "Apakah Anda yakin ingin menghapus transaksi ini?",
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.of(context).pop(false),
+                                  child: const Text(
+                                    "Batal",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    bool success = await DatabaseHelper.instance
+                                        .deleteTransaksi(tx.id);
+                                    if (mounted) {
+                                      Navigator.of(context).pop(success);
+                                    }
+                                  },
+                                  child: const Text(
+                                    "Hapus",
+                                    style: TextStyle(color: Colors.redAccent),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      onDismissed: (direction) {
+                        // Hapus item dari list dan perbarui UI
+                        setState(() {
+                          transaksiList.removeAt(index);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Transaksi berhasil dihapus"),
+                            backgroundColor: Colors.green,
                           ),
                         );
                       },
+                      child: TransactionCard(
+                        merchantName: tx.kategoriNama ?? '',
+                        date: formattedDate,
+                        deskripsi: tx.deskripsi,
+                        amount: tx.jumlah,
+                        logoAsset: 'assets/images/shell_logo.png',
+                        tipe: tx.tipe,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => DetailTransactionPage(
+                                    transactionData: {
+                                      'id': tx.id,
+                                      'tanggal': tx.tanggal,
+                                      'jumlah': tx.jumlah,
+                                      'deskripsi': tx.deskripsi,
+                                      'tipe': tx.tipe,
+                                      'kategori_nama': tx.kategoriNama,
+                                      'kategori_tipe': tx.kategoriTipe,
+                                      'dompet_nama': tx.dompetNama,
+                                    },
+                                  ),
+                            ),
+                          ).then((_) => fetchTransaksi());
+                        },
+                      ),
                     );
                   },
                 ),
@@ -207,7 +271,10 @@ class _HomeContentState extends State<HomeContent> {
           ),
           AddButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/add');
+              Navigator.pushNamed(
+                context,
+                '/add',
+              ).then((_) => fetchTransaksi());
             },
           ),
         ],

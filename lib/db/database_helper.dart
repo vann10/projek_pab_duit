@@ -328,6 +328,45 @@ class DatabaseHelper {
     }
   }
 
+  Future<bool> deleteTransaksi(int id) async {
+    final db = await instance.database;
+    try {
+      await db.transaction((txn) async {
+        // 1. Ambil data transaksi yang akan dihapus untuk mengetahui jumlah, tipe, dan dompetnya
+        final oldTransaksi = await txn.query(
+          'transaksi',
+          where: 'id = ?',
+          whereArgs: [id],
+          limit: 1,
+        );
+
+        if (oldTransaksi.isEmpty) {
+          throw Exception("Transaksi dengan ID $id tidak ditemukan.");
+        }
+
+        final oldData = oldTransaksi.first;
+        final int jumlahLama = oldData['jumlah'] as int;
+        final String tipeLama = oldData['tipe'] as String;
+        final int dompetId = oldData['dompet_id'] as int;
+
+        // 2. Kembalikan saldo dompet. Jika INCOME dihapus, saldo berkurang. Jika EXPENSE dihapus, saldo bertambah.
+        final int saldoReversal =
+            tipeLama == 'INCOME' ? -jumlahLama : jumlahLama;
+        await txn.rawUpdate(
+          'UPDATE dompet SET saldo = saldo + ? WHERE id = ?',
+          [saldoReversal, dompetId],
+        );
+
+        // 3. Hapus transaksi itu sendiri
+        await txn.delete('transaksi', where: 'id = ?', whereArgs: [id]);
+      });
+      return true;
+    } catch (e) {
+      print('❌ Error saat menghapus transaksi: $e');
+      return false;
+    }
+  }
+
   Future close() async {
     final db = await instance.database;
     db.close();
