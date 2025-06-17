@@ -18,11 +18,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -60,10 +56,7 @@ class DatabaseHelper {
         )
       ''');
 
-      await db.insert('dompet', {
-          'nama': 'Dompet Utama',
-          'saldo': 0,
-      });
+      await db.insert('dompet', {'nama': 'Dompet Utama', 'saldo': 0});
 
       List<Map<String, String>> kategoriList = [
         {'nama': 'Makanan', 'tipe': 'EXPENSE'},
@@ -76,13 +69,12 @@ class DatabaseHelper {
         {'nama': 'Gaji', 'tipe': 'INCOME'},
         {'nama': 'Bonus', 'tipe': 'INCOME'},
         {'nama': 'Uang Saku', 'tipe': 'INCOME'},
-        {'nama': 'Lainnya', 'tipe': 'INCOME'}
+        {'nama': 'Lainnya', 'tipe': 'INCOME'},
       ];
 
       for (var kategori in kategoriList) {
         await db.insert('kategori', kategori);
       }
-
     } catch (e) {
       print("❌ Error saat membuat database: $e");
     }
@@ -90,11 +82,36 @@ class DatabaseHelper {
 
   Future<void> addDompet(String nama, int saldo) async {
     final db = await instance.database;
-    await db.insert('dompet', {
-          'nama': nama,
-          'saldo': saldo,
-      });
+    await db.insert('dompet', {'nama': nama, 'saldo': saldo});
   }
+
+  // START: MODIFICATION
+  /// Deletes a wallet and all its associated transactions.
+  ///
+  /// Returns `true` if deletion is successful, `false` otherwise.
+  /// The main wallet (id = 1) cannot be deleted.
+  Future<bool> deleteDompet(int id) async {
+    // Prevent deleting the main wallet
+    if (id == 1) {
+      print("Deletion failed: Cannot delete the main wallet.");
+      return false;
+    }
+
+    final db = await instance.database;
+    try {
+      await db.transaction((txn) async {
+        // First, delete associated transactions to maintain data integrity
+        await txn.delete('transaksi', where: 'dompet_id = ?', whereArgs: [id]);
+        // Then, delete the wallet itself
+        await txn.delete('dompet', where: 'id = ?', whereArgs: [id]);
+      });
+      return true;
+    } catch (e) {
+      print('❌ Error deleting wallet: $e');
+      return false;
+    }
+  }
+  // END: MODIFICATION
 
   // Insert transaksi dan update saldo dompet dalam satu transaksi database
   Future<bool> insertTransaksiWithUpdateSaldo({
@@ -105,7 +122,7 @@ class DatabaseHelper {
     int dompetId = 1, // Default ke dompet utama
   }) async {
     final db = await instance.database;
-    
+
     try {
       await db.transaction((txn) async {
         // 1. Cari kategori_id berdasarkan nama kategori
@@ -115,7 +132,7 @@ class DatabaseHelper {
           whereArgs: [kategori],
           limit: 1,
         );
-        
+
         int? kategoriId;
         if (kategoriResult.isNotEmpty) {
           kategoriId = kategoriResult.first['id'] as int;
@@ -138,7 +155,7 @@ class DatabaseHelper {
           [saldoChange, dompetId],
         );
       });
-      
+
       return true;
     } catch (e) {
       print('Error inserting transaction: $e');
@@ -171,7 +188,7 @@ class DatabaseHelper {
       whereArgs: [dompetId],
       limit: 1,
     );
-    
+
     if (result.isNotEmpty) {
       return result.first['saldo'] as int;
     }
@@ -187,14 +204,17 @@ class DatabaseHelper {
   // Fungsi untuk mendapatkan riwayat transaksi
   Future<List<Map<String, dynamic>>> getTransaksi({int limit = 50}) async {
     final db = await instance.database;
-    return await db.rawQuery('''
+    return await db.rawQuery(
+      '''
       SELECT t.*, k.nama as kategori_nama, d.nama as dompet_nama
       FROM transaksi t
       LEFT JOIN kategori k ON t.kategori_id = k.id
       LEFT JOIN dompet d ON t.dompet_id = d.id
       ORDER BY t.tanggal DESC
       LIMIT ?
-    ''', [limit]);
+    ''',
+      [limit],
+    );
   }
 
   Future<List<Map<String, dynamic>>> getAllTransaksiAsMap() async {
@@ -248,7 +268,8 @@ class DatabaseHelper {
         final int dompetLamaId = oldData['dompet_id'] as int;
 
         // Kembalikan saldo ke dompet lama
-        final int saldoReversal = tipeLama == 'INCOME' ? -jumlahLama : jumlahLama;
+        final int saldoReversal =
+            tipeLama == 'INCOME' ? -jumlahLama : jumlahLama;
         await txn.rawUpdate(
           'UPDATE dompet SET saldo = saldo + ? WHERE id = ?',
           [saldoReversal, dompetLamaId],
@@ -311,5 +332,4 @@ class DatabaseHelper {
     final db = await instance.database;
     db.close();
   }
-
 }

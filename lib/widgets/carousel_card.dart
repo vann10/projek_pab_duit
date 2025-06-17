@@ -4,8 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
 
-// Compact Credit Card Model for carousel
+// START: MODIFICATION
 class CreditCardModel {
+  final int id;
   final String cardName;
   final String cardNumber;
   final String expiryDate;
@@ -14,6 +15,7 @@ class CreditCardModel {
   final int saldo;
 
   CreditCardModel({
+    required this.id,
     required this.cardName,
     required this.cardNumber,
     required this.expiryDate,
@@ -23,14 +25,20 @@ class CreditCardModel {
   });
 
   factory CreditCardModel.fromMap(Map<String, dynamic> map, int index) {
-    String cardNumber = "1234 5678 9012 ${(3456 + index).toString().padLeft(4, '0')}";
-    
+    String cardNumber =
+        "1234 5678 9012 ${(3456 + index).toString().padLeft(4, '0')}";
+
     DateTime now = DateTime.now();
     DateTime expiry = DateTime(now.year + 2 + (index % 3), now.month);
-    String expiryDate = "${expiry.month.toString().padLeft(2, '0')}/${expiry.year.toString().substring(2)}";
-    
+    String expiryDate =
+        "${expiry.month.toString().padLeft(2, '0')}/${expiry.year.toString().substring(2)}";
+
     List<List<Color>> gradients = [
-      [const Color(0xFFFFD700), const Color(0xFFE48F23), const Color(0xFFC0392B)],
+      [
+        const Color(0xFFFFD700),
+        const Color(0xFFE48F23),
+        const Color(0xFFC0392B),
+      ],
       [const Color(0xFF4e54c8), const Color(0xFF8f94fb)],
       [const Color(0xFF00c6ff), const Color(0xFF0072ff)],
       [const Color(0xFFf093fb), const Color(0xFFf5576c)],
@@ -39,8 +47,9 @@ class CreditCardModel {
       [const Color(0xFFfa709a), const Color(0xFFfee140)],
       [const Color(0xFFa8edea), const Color(0xFFfed6e3)],
     ];
-    
+
     return CreditCardModel(
+      id: map['id'], // Pass the wallet ID
       cardName: map['nama'] ?? 'Card ${index + 1}',
       cardNumber: cardNumber,
       expiryDate: expiryDate,
@@ -55,10 +64,14 @@ class CreditCardModel {
   }
 }
 
-// Compact Credit Card Widget optimized for carousel
 class CreditCardWidget extends StatelessWidget {
   final CreditCardModel card;
-  const CreditCardWidget({super.key, required this.card});
+  final VoidCallback onDelete;
+  const CreditCardWidget({
+    super.key,
+    required this.card,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +92,6 @@ class CreditCardWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row with chip and wifi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -90,15 +102,80 @@ class CreditCardWidget extends StatelessWidget {
                   color: Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Icon(Icons.credit_card, color: Colors.white, size: 16),
+                child: const Icon(
+                  Icons.credit_card,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
-              const Icon(Icons.wifi, color: Colors.white, size: 20),
+              // Show delete icon only if it's not the main wallet (id != 1)
+              if (card.id != 1)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.white),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          backgroundColor: const Color(0xFF2E2D4A),
+                          title: const Text(
+                            'Konfirmasi Hapus',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          content: Text(
+                            'Apakah Anda yakin ingin menghapus dompet "${card.cardName}"? Semua transaksi yang terhubung juga akan terhapus.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text(
+                                'Batal',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            TextButton(
+                              child: const Text(
+                                'Hapus',
+                                style: TextStyle(color: Colors.redAccent),
+                              ),
+                              onPressed: () async {
+                                Navigator.of(context).pop(); // Close dialog
+                                final success = await DatabaseHelper.instance
+                                    .deleteDompet(card.id);
+                                if (success) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Dompet berhasil dihapus'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                  onDelete(); // Trigger UI refresh
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Gagal menghapus Dompet Utama',
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                )
+              else
+                const Icon(Icons.wifi, color: Colors.white, size: 20),
             ],
           ),
-          
+
           const Spacer(),
-          
-          // Card number
+
           Text(
             card.cardNumber,
             style: GoogleFonts.sourceCodePro(
@@ -108,10 +185,9 @@ class CreditCardWidget extends StatelessWidget {
               letterSpacing: 1.5,
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
-          // Balance
+
           Text(
             formattedSaldo,
             style: GoogleFonts.poppins(
@@ -120,15 +196,13 @@ class CreditCardWidget extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
-          // Bottom row with details
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // Card name
               Expanded(
                 flex: 2,
                 child: Column(
@@ -154,8 +228,7 @@ class CreditCardWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              
-              // Expiry date
+
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -185,7 +258,8 @@ class CreditCardWidget extends StatelessWidget {
 }
 
 class CardCarouselWidget extends StatefulWidget {
-  const CardCarouselWidget({super.key});
+  final VoidCallback? onDataChanged;
+  const CardCarouselWidget({super.key, this.onDataChanged});
 
   @override
   State<CardCarouselWidget> createState() => _CardCarouselWidgetState();
@@ -193,77 +267,63 @@ class CardCarouselWidget extends StatefulWidget {
 
 class _CardCarouselWidgetState extends State<CardCarouselWidget> {
   int _currentCard = 0;
-  List<CreditCardModel> _cards = [];
-  Future<List<Map<String, dynamic>>>? _future; // Cache the future
+  Future<List<Map<String, dynamic>>>? _dompetFuture;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the future once
-    _future = DatabaseHelper.instance.getAllDompet();
+    _dompetFuture = DatabaseHelper.instance.getAllDompet();
+  }
+
+  void _refreshData() {
+    setState(() {
+      _dompetFuture = DatabaseHelper.instance.getAllDompet();
+    });
+
+    if (widget.onDataChanged != null) {
+      widget.onDataChanged!();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _future, // Use the cached future
+      future: _dompetFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return SizedBox(
+          return const SizedBox(
             height: 240,
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 200,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                const SizedBox(height: 40),
-              ],
-            ),
+            child: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           return SizedBox(
             height: 240,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 200,
-                  child: Center(
-                    child: Text(
-                      'Error: ${snapshot.error}',
-                      style: GoogleFonts.poppins(color: Colors.red),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-              ],
+            child: Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
             ),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return SizedBox(
             height: 240,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 200,
-                  child: Center(
-                    child: Text(
-                      'No cards available',
-                      style: GoogleFonts.poppins(color: Colors.grey),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-              ],
+            child: Center(
+              child: Text(
+                'Tidak ada dompet tersedia',
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
             ),
           );
         } else {
-          // Only rebuild cards if data has changed
-          if (_cards.isEmpty) {
-            final dompetList = snapshot.data!;
-            _cards = dompetList.asMap().entries.map((entry) {
-              return CreditCardModel.fromMap(entry.value, entry.key);
-            }).toList();
+          final dompetList = snapshot.data!;
+          final cards =
+              dompetList.asMap().entries.map((entry) {
+                return CreditCardModel.fromMap(entry.value, entry.key);
+              }).toList();
+
+          if (_currentCard >= cards.length && cards.isNotEmpty) {
+            _currentCard = cards.length - 1;
           }
 
           return SizedBox(
@@ -271,18 +331,21 @@ class _CardCarouselWidgetState extends State<CardCarouselWidget> {
             child: Column(
               children: [
                 CarouselSlider.builder(
-                  itemCount: _cards.length,
+                  itemCount: cards.length,
                   itemBuilder: (context, index, realIndex) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: CreditCardWidget(card: _cards[index]),
+                      child: CreditCardWidget(
+                        card: cards[index],
+                        onDelete: _refreshData,
+                      ),
                     );
                   },
                   options: CarouselOptions(
                     height: 200,
                     viewportFraction: 0.85,
-                    initialPage: 0,
-                    enableInfiniteScroll: _cards.length > 1,
+                    initialPage: _currentCard,
+                    enableInfiniteScroll: cards.length > 1,
                     enlargeCenterPage: true,
                     enlargeFactor: 0.1,
                     onPageChanged: (index, reason) {
@@ -293,20 +356,22 @@ class _CardCarouselWidgetState extends State<CardCarouselWidget> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                // Dots Indicator
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: _cards.asMap().entries.map((entry) {
-                    return Container(
-                      width: 8.0,
-                      height: 8.0,
-                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(_currentCard == entry.key ? 0.9 : 0.4),
-                      ),
-                    );
-                  }).toList(),
+                  children:
+                      cards.asMap().entries.map((entry) {
+                        return Container(
+                          width: 8.0,
+                          height: 8.0,
+                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(
+                              _currentCard == entry.key ? 0.9 : 0.4,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                 ),
               ],
             ),
@@ -315,12 +380,5 @@ class _CardCarouselWidgetState extends State<CardCarouselWidget> {
       },
     );
   }
-
-  // Method to refresh data when needed (call this from parent widget)
-  void refreshData() {
-    setState(() {
-      _future = DatabaseHelper.instance.getAllDompet();
-      _cards.clear(); // Clear cards to force rebuild
-    });
-  }
 }
+// END: MODIFICATION

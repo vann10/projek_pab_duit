@@ -22,16 +22,22 @@ class CreditCardModel {
 
   factory CreditCardModel.fromMap(Map<String, dynamic> map, int index) {
     // Generate card number based on index or id
-    String cardNumber = "1234 5678 9012 ${(3456 + index).toString().padLeft(4, '0')}";
-    
+    String cardNumber =
+        "1234 5678 9012 ${(3456 + index).toString().padLeft(4, '0')}";
+
     // Generate expiry date (current year + 2-4 years)
     DateTime now = DateTime.now();
     DateTime expiry = DateTime(now.year + 2 + (index % 3), now.month);
-    String expiryDate = "${expiry.month.toString().padLeft(2, '0')}/${expiry.year.toString().substring(2)}";
-    
+    String expiryDate =
+        "${expiry.month.toString().padLeft(2, '0')}/${expiry.year.toString().substring(2)}";
+
     // Gradient colors array
     List<List<Color>> gradients = [
-      [const Color(0xFFFFD700), const Color(0xFFE48F23), const Color(0xFFC0392B)],
+      [
+        const Color(0xFFFFD700),
+        const Color(0xFFE48F23),
+        const Color(0xFFC0392B),
+      ],
       [const Color(0xFF4e54c8), const Color(0xFF8f94fb)],
       [const Color(0xFF00c6ff), const Color(0xFF0072ff)],
       [const Color(0xFFf093fb), const Color(0xFFf5576c)],
@@ -40,7 +46,7 @@ class CreditCardModel {
       [const Color(0xFFfa709a), const Color(0xFFfee140)],
       [const Color(0xFFa8edea), const Color(0xFFfed6e3)],
     ];
-    
+
     return CreditCardModel(
       cardName: map['nama'] ?? 'Card ${index + 1}',
       cardNumber: cardNumber,
@@ -228,7 +234,7 @@ class BalanceWidget extends StatelessWidget {
           } else {
             final dompetList = snapshot.data ?? [];
             final totalSaldo = dompetList.fold<int>(
-              0, 
+              0,
               (sum, dompet) => sum + (dompet['saldo'] as int? ?? 0),
             );
 
