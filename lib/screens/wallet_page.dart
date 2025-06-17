@@ -35,7 +35,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const CardCarouselWidget(),
+              CardCarouselWidget(),
               const SizedBox(height: 20),
               const BalanceWidget(),
               const SizedBox(height: 20),

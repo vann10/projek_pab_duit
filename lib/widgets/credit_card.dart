@@ -270,31 +270,3 @@ class BalanceWidget extends StatelessWidget {
     );
   }
 }
-
-// Example usage widget
-class CreditCardPage extends StatelessWidget {
-  const CreditCardPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: Text(
-          'My Cards',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: const Column(
-        children: [
-          SizedBox(height: 20),
-          BalanceWidget(),
-          SizedBox(height: 30),
-          DynamicCreditCardList(),
-        ],
-      ),
-    );
-  }
-}

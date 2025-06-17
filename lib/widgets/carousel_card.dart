@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:projek_pab_duit/db/database_helper.dart';
+import 'package:projek_pab_duit/screens/home_page.dart';
 
 // START: MODIFICATION
 class CreditCardModel {
@@ -108,7 +109,6 @@ class CreditCardWidget extends StatelessWidget {
                   size: 16,
                 ),
               ),
-              // Show delete icon only if it's not the main wallet (id != 1)
               if (card.id != 1)
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.white),
@@ -140,7 +140,6 @@ class CreditCardWidget extends StatelessWidget {
                                 style: TextStyle(color: Colors.redAccent),
                               ),
                               onPressed: () async {
-                                Navigator.of(context).pop(); // Close dialog
                                 final success = await DatabaseHelper.instance
                                     .deleteDompet(card.id);
                                 if (success) {
@@ -150,7 +149,11 @@ class CreditCardWidget extends StatelessWidget {
                                       backgroundColor: Colors.green,
                                     ),
                                   );
-                                  onDelete(); // Trigger UI refresh
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const HomePage()),
+                                  );
+                                  onDelete();
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -381,4 +384,3 @@ class _CardCarouselWidgetState extends State<CardCarouselWidget> {
     );
   }
 }
-// END: MODIFICATION
