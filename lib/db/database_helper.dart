@@ -286,7 +286,8 @@ class DatabaseHelper {
     required String deskripsiBaru,
     required String tipe,
     required int dompetId,
-  }) async {
+    required String tanggalBaru
+    }) async {
     final db = await instance.database;
 
     try {
@@ -347,8 +348,8 @@ class DatabaseHelper {
             'kategori_id': kategoriIdBaru,
             'deskripsi': deskripsiBaru,
             'tipe': tipe,
-            'tanggal': DateTime.now().toIso8601String(),
-            'dompet_id': dompetId, // Dompet bisa berubah
+            'tanggal': tanggalBaru,
+            'dompet_id': dompetId,
           },
           where: 'id = ?',
           whereArgs: [id],

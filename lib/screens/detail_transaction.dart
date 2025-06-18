@@ -120,7 +120,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
     ),
     CategoryItem(
       id: 4,
-      name: 'Tabungan', 
+      name: 'Tabungan',
       icon: Icons.bar_chart,
       color: Colors.yellow,
     ),
@@ -605,6 +605,9 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                                   ? 'INCOME'
                                   : 'EXPENSE';
 
+                          String tanggalBaru =
+                              _selectedDateTime.toIso8601String();
+
                           // Panggil updateTransaksiById langsung
                           bool success = await DatabaseHelper.instance
                               .updateTransaksiById(
@@ -615,6 +618,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                                     _descriptionController.text.trim(),
                                 tipe: tipe,
                                 dompetId: _selectedPaymentMethodId ?? 1,
+                                tanggalBaru: tanggalBaru,
                               );
 
                           if (success) {
