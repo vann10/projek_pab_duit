@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:projek_pab_duit/themes/colors.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -37,9 +39,9 @@ class _LoadingPageState extends State<LoadingPage> {
         ),
         child: Center(
           child: Image.asset(
-            'assets/images/logo.png',
-            height: 500,
-            width: 700,
+            'assets/images/logorill.png',
+            height: 200,
+            width: 400,
             fit: BoxFit.fitHeight,
           ),
         ),
