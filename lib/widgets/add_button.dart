@@ -10,7 +10,7 @@ class AddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 120,
+      bottom: 145,
       right: 30,
       child: FloatingActionButton(
         shape: CircleBorder(),

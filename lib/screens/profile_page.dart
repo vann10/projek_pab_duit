@@ -45,7 +45,6 @@ class UserProfileScreen extends StatelessWidget {
           children: [
             ProfileHeaderWidget(),
             SizedBox(height: 20),
-            ProfileMain(),
           ],
         ),
       ),

@@ -19,12 +19,6 @@ class InsightPage extends StatelessWidget {
           backgroundColor: DarkColors.bg,
           elevation: 0,
           toolbarHeight: 80,
-          leading: IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {
-              // Muncul menu about?
-            },
-          ),
           title: const Text(
             'Insight',
             style: TextStyle(

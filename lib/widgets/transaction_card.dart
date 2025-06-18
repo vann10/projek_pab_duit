@@ -160,7 +160,6 @@ class TransactionCard extends StatelessWidget {
     final amountColor = tipe == 'INCOME' ? Colors.greenAccent : Colors.red;
     final accentColor = getAccentColor();
     final iconData = getIcon();
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
