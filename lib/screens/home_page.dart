@@ -128,7 +128,7 @@ class _HomeContentState extends State<HomeContent> {
                 center: Alignment(-1.0, -1.5),
                 radius: 1,
                 colors: [DarkColors.bg, DarkColors.bg1, DarkColors.bg],
-                stops: [0.0, 0.5, 1],
+                stops: [0.0, 0.3, 0.9],
               ),
             ),
           ),
@@ -154,9 +154,9 @@ class _HomeContentState extends State<HomeContent> {
               Expanded(
                 child:
                     transaksiList.isEmpty
-                        ? Positioned(
-                          top: 200,
-                          child: Center(
+                        ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 100),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -200,14 +200,22 @@ class _HomeContentState extends State<HomeContent> {
                               key: Key(tx.id.toString()),
                               direction: DismissDirection.endToStart,
                               background: Container(
-                                color: Colors.transparent,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade400,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                 ),
                                 alignment: Alignment.centerRight,
                                 child: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
+                                  Icons.delete_sweep_rounded,
+                                  color: Colors.white,
+                                  size: 30,
                                 ),
                               ),
                               confirmDismiss: (direction) async {
